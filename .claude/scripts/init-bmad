@@ -1,0 +1,331 @@
+#!/usr/bin/env bash
+# init-bmad — Bootstrap BMAD story-driven development framework in a new project
+# Usage: init-bmad [--name "Project Name"] [--stack python|typescript|go|other]
+#                  [--specialists "backend,data,qa"] [--non-interactive]
+# Source: ~/.claude/scripts/init-bmad
+
+set -euo pipefail
+
+TEMPLATE_DIR="${HOME}/.claude/bmad-template"
+SCRIPT_NAME="init-bmad"
+
+# ─── Colors ───────────────────────────────────────────────────────────────────
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+BOLD='\033[1m'
+NC='\033[0m'
+
+# ─── Helpers ──────────────────────────────────────────────────────────────────
+info()    { echo -e "${BLUE}[init-bmad]${NC} $*"; }
+success() { echo -e "${GREEN}[init-bmad]${NC} $*"; }
+warn()    { echo -e "${YELLOW}[init-bmad]${NC} $*"; }
+error()   { echo -e "${RED}[init-bmad] ERROR:${NC} $*" >&2; exit 1; }
+prompt()  { echo -e "${CYAN}${BOLD}?${NC} $*"; }
+
+# ─── Pre-flight ───────────────────────────────────────────────────────────────
+if [[ ! -d "${TEMPLATE_DIR}" ]]; then
+  error "Template directory not found: ${TEMPLATE_DIR}\nRun: ls ~/.claude/bmad-template to verify install."
+fi
+
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+  error "Not inside a git repository. Run 'git init' first or cd into an existing repo."
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+if [[ "$(pwd)" != "${REPO_ROOT}" ]]; then
+  warn "You are not in the repo root. Running from: ${REPO_ROOT}"
+  cd "${REPO_ROOT}" || error "Cannot cd to repo root"
+fi
+
+if [[ -d "bmad/qf-bmad" ]]; then
+  warn "bmad/qf-bmad already exists. Re-running will overwrite workflow/task/template files but preserve epics and agent customizations."
+  read -r -p "Continue? [y/N] " confirm
+  [[ "${confirm}" =~ ^[Yy]$ ]] || { info "Aborted."; exit 0; }
+fi
+
+# ─── Argument parsing ─────────────────────────────────────────────────────────
+PROJECT_NAME=""
+PRIMARY_STACK=""
+SPECIALISTS_RAW=""
+NON_INTERACTIVE=false
+DESCRIPTION=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --name)        PROJECT_NAME="$2"; shift 2 ;;
+    --stack)       PRIMARY_STACK="$2"; shift 2 ;;
+    --specialists) SPECIALISTS_RAW="$2"; shift 2 ;;
+    --desc)        DESCRIPTION="$2"; shift 2 ;;
+    --non-interactive) NON_INTERACTIVE=true; shift ;;
+    -h|--help)
+      echo "Usage: ${SCRIPT_NAME} [options]"
+      echo ""
+      echo "Options:"
+      echo "  --name NAME            Project name (default: directory name)"
+      echo "  --stack STACK          Primary language: python|typescript|go|other"
+      echo "  --specialists LIST     Comma-separated: backend,frontend,data,qa,infra"
+      echo "  --desc DESCRIPTION     One-line project description"
+      echo "  --non-interactive      Use defaults, no prompts"
+      exit 0
+      ;;
+    *) warn "Unknown option: $1"; shift ;;
+  esac
+done
+
+# ─── Interactive prompts ───────────────────────────────────────────────────────
+DEFAULT_NAME="$(basename "${REPO_ROOT}")"
+
+if [[ -z "${PROJECT_NAME}" ]] && [[ "${NON_INTERACTIVE}" == false ]]; then
+  prompt "Project name? [${DEFAULT_NAME}]"
+  read -r input
+  PROJECT_NAME="${input:-${DEFAULT_NAME}}"
+fi
+PROJECT_NAME="${PROJECT_NAME:-${DEFAULT_NAME}}"
+
+if [[ -z "${DESCRIPTION}" ]] && [[ "${NON_INTERACTIVE}" == false ]]; then
+  prompt "One-line project description?"
+  read -r DESCRIPTION
+fi
+DESCRIPTION="${DESCRIPTION:-A software project using BMAD story-driven development.}"
+
+if [[ -z "${PRIMARY_STACK}" ]] && [[ "${NON_INTERACTIVE}" == false ]]; then
+  echo ""
+  echo "  1) python"
+  echo "  2) typescript"
+  echo "  3) go"
+  echo "  4) other"
+  prompt "Primary language? [1]"
+  read -r stack_choice
+  case "${stack_choice}" in
+    2) PRIMARY_STACK="typescript" ;;
+    3) PRIMARY_STACK="go" ;;
+    4) PRIMARY_STACK="other" ;;
+    *) PRIMARY_STACK="python" ;;
+  esac
+fi
+PRIMARY_STACK="${PRIMARY_STACK:-python}"
+
+if [[ -z "${SPECIALISTS_RAW}" ]] && [[ "${NON_INTERACTIVE}" == false ]]; then
+  echo ""
+  echo "  Available specialists: backend, frontend, data, qa, infra"
+  prompt "Which specialists? (comma-separated) [backend,qa]"
+  read -r SPECIALISTS_RAW
+fi
+SPECIALISTS_RAW="${SPECIALISTS_RAW:-backend,qa}"
+
+# ─── Stack defaults ────────────────────────────────────────────────────────────
+case "${PRIMARY_STACK}" in
+  python)
+    TEST_CMD="pytest"
+    LINT_CMD="ruff check ."
+    FORMAT_CHECK_CMD="ruff format --check ."
+    FORMAT_FIX_CMD="ruff check --fix ."
+    ENV_ACTIVATE_CMD="source venv/bin/activate"
+    DEPS_INSTALL_CMD="pip install -r requirements.txt"
+    APP_LAUNCH_CMD="python main.py  # or: streamlit run app.py / uvicorn app:app"
+    SETUP_CMDS="python -m venv venv\nsource venv/bin/activate\npip install -r requirements.txt"
+    ;;
+  typescript)
+    TEST_CMD="npm test"
+    LINT_CMD="eslint ."
+    FORMAT_CHECK_CMD="prettier --check ."
+    FORMAT_FIX_CMD="prettier --write ."
+    ENV_ACTIVATE_CMD="# (no activation needed)"
+    DEPS_INSTALL_CMD="npm install"
+    APP_LAUNCH_CMD="npm run dev"
+    SETUP_CMDS="npm install"
+    ;;
+  go)
+    TEST_CMD="go test ./..."
+    LINT_CMD="golangci-lint run"
+    FORMAT_CHECK_CMD="gofmt -l ."
+    FORMAT_FIX_CMD="gofmt -w ."
+    ENV_ACTIVATE_CMD="# (no activation needed)"
+    DEPS_INSTALL_CMD="go mod download"
+    APP_LAUNCH_CMD="go run main.go"
+    SETUP_CMDS="go mod download"
+    ;;
+  *)
+    TEST_CMD="make test"
+    LINT_CMD="make lint"
+    FORMAT_CHECK_CMD="make format-check"
+    FORMAT_FIX_CMD="make format"
+    ENV_ACTIVATE_CMD="# configure for your stack"
+    DEPS_INSTALL_CMD="# install dependencies"
+    APP_LAUNCH_CMD="# launch command"
+    SETUP_CMDS="# setup steps"
+    ;;
+esac
+
+# ─── Parse specialists ─────────────────────────────────────────────────────────
+IFS=',' read -ra SPECIALIST_LIST <<< "${SPECIALISTS_RAW}"
+SPECIALIST_LIST=("${SPECIALIST_LIST[@]// /}")  # trim spaces
+
+# ─── Create directory structure ────────────────────────────────────────────────
+info "Creating BMAD directory structure..."
+mkdir -p bmad/qf-bmad/workflows
+mkdir -p bmad/qf-bmad/tasks
+mkdir -p bmad/qf-bmad/templates
+mkdir -p bmad/qf-bmad/checklists
+mkdir -p bmad/qf-bmad/agents/active
+mkdir -p bmad/epics
+
+# ─── Copy template files ────────────────────────────────────────────────────────
+info "Copying workflow, task, template, and checklist files..."
+cp "${TEMPLATE_DIR}/workflows/"*.md bmad/qf-bmad/workflows/
+cp "${TEMPLATE_DIR}/tasks/"*.md bmad/qf-bmad/tasks/
+cp "${TEMPLATE_DIR}/templates/"* bmad/qf-bmad/templates/
+cp "${TEMPLATE_DIR}/checklists/"*.md bmad/qf-bmad/checklists/
+
+# Replace placeholders in checklist files
+for f in bmad/qf-bmad/checklists/*.md; do
+  sed -i.bak \
+    -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
+    -e "s|{{DEPS_INSTALL_CMD}}|${DEPS_INSTALL_CMD}|g" \
+    -e "s|{{APP_LAUNCH_CMD}}|${APP_LAUNCH_CMD}|g" \
+    -e "s|{{TEST_CMD}}|${TEST_CMD}|g" \
+    -e "s|{{LINT_CMD}}|${LINT_CMD}|g" \
+    -e "s|{{FORMAT_CMD}}|${FORMAT_CHECK_CMD}|g" \
+    "${f}" && rm "${f}.bak"
+done
+
+# Replace placeholders in task files
+for f in bmad/qf-bmad/tasks/*.md; do
+  sed -i.bak \
+    -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
+    -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
+    -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
+    "${f}" && rm "${f}.bak"
+done
+
+# ─── Copy and customize specialist agents ──────────────────────────────────────
+info "Setting up specialist agents: ${SPECIALISTS_RAW}..."
+for spec in "${SPECIALIST_LIST[@]}"; do
+  stub_file="${TEMPLATE_DIR}/agents/stubs/${spec}-specialist.md"
+  if [[ -f "${stub_file}" ]]; then
+    dest="bmad/qf-bmad/agents/active/${spec}-specialist.md"
+    if [[ -f "${dest}" ]]; then
+      warn "  Skipping ${spec}-specialist.md (already exists, preserving customizations)"
+    else
+      cp "${stub_file}" "${dest}"
+      # Replace project name placeholder
+      sed -i.bak "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" "${dest}" && rm "${dest}.bak"
+      success "  Created ${dest}"
+    fi
+  else
+    warn "  No stub found for '${spec}' — creating blank agent file"
+    SPEC_CAP="$(capitalize "${spec}")"
+    cat > "bmad/qf-bmad/agents/active/${spec}-specialist.md" << EOF
+# ${SPEC_CAP} Specialist - ${PROJECT_NAME}
+
+ACTIVATION-NOTICE: Load this persona when working on ${spec} concerns.
+
+**Domain**: ${spec}
+**Project**: ${PROJECT_NAME}
+
+## Expertise
+- [Define ${spec} focus areas]
+
+## Quality Gates
+- [ ] [Define ${spec}-specific quality criteria]
+EOF
+  fi
+done
+
+# ─── Portable capitalize helper ───────────────────────────────────────────────
+capitalize() { echo "$1" | awk '{print toupper(substr($0,1,1)) substr($0,2)}'; }
+
+# ─── Create BMAD Master ────────────────────────────────────────────────────────
+if [[ ! -f "bmad/qf-bmad/agents/bmad-master.md" ]]; then
+  info "Creating BMAD Master agent..."
+  cp "${TEMPLATE_DIR}/agents/bmad-master.md" bmad/qf-bmad/agents/bmad-master.md
+
+  sed -i.bak \
+    -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+    -e "s|{{PROJECT_DESCRIPTION}}|${DESCRIPTION}|g" \
+    -e "s|{{PROJECT_DOMAIN}}|${PROJECT_NAME}|g" \
+    "bmad/qf-bmad/agents/bmad-master.md" && rm "bmad/qf-bmad/agents/bmad-master.md.bak"
+
+  # Append specialist list to BMAD master
+  {
+    echo ""
+    echo "### Active Specialists"
+    for spec in "${SPECIALIST_LIST[@]}"; do
+      echo "- $(capitalize "${spec}") Specialist: see \`bmad/qf-bmad/agents/active/${spec}-specialist.md\`"
+    done
+  } >> bmad/qf-bmad/agents/bmad-master.md
+fi
+
+# ─── Create core-config.yaml ────────────────────────────────────────────────────
+info "Creating core-config.yaml..."
+
+cp "${TEMPLATE_DIR}/core-config.yaml.template" bmad/qf-bmad/core-config.yaml
+sed -i.bak \
+  -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+  -e "s|{{PROJECT_DESCRIPTION}}|${DESCRIPTION}|g" \
+  -e "s|{{PRIMARY_LANGUAGE}}|${PRIMARY_STACK}|g" \
+  -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
+  -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
+  -e "s|{{FORMAT_CHECK_COMMAND}}|${FORMAT_CHECK_CMD}|g" \
+  -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
+  -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
+  bmad/qf-bmad/core-config.yaml && rm bmad/qf-bmad/core-config.yaml.bak
+# Append specialists section to core-config
+echo "" >> bmad/qf-bmad/core-config.yaml
+echo "specialists:" >> bmad/qf-bmad/core-config.yaml
+for spec in "${SPECIALIST_LIST[@]}"; do
+  echo "  - ${spec}" >> bmad/qf-bmad/core-config.yaml
+done
+
+# ─── Generate CLAUDE.md ────────────────────────────────────────────────────────
+if [[ -f "CLAUDE.md" ]]; then
+  warn "CLAUDE.md already exists — skipping generation. Edit manually or delete and re-run."
+else
+  info "Generating CLAUDE.md..."
+  cp "${TEMPLATE_DIR}/CLAUDE.md.template" CLAUDE.md
+  sed -i.bak \
+    -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+    -e "s|{{PROJECT_DESCRIPTION}}|${DESCRIPTION}|g" \
+    -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
+    -e "s|{{TEST_FRAMEWORK}}|${TEST_CMD%% *}|g" \
+    -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
+    -e "s|{{FORMAT_CHECK_COMMAND}}|${FORMAT_CHECK_CMD}|g" \
+    -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
+    -e "s|{{SETUP_COMMANDS}}|${SETUP_CMDS}|g" \
+    CLAUDE.md && rm CLAUDE.md.bak
+  success "CLAUDE.md created — edit it to add architecture summary, tech stack, and env vars."
+fi
+
+# ─── Update .gitignore ────────────────────────────────────────────────────────
+if [[ -f ".gitignore" ]]; then
+  if ! grep -q "bmad/epics/\*/stories/\.draft/" .gitignore 2>/dev/null; then
+    echo "" >> .gitignore
+    echo "# BMAD draft stories" >> .gitignore
+    echo "bmad/epics/*/stories/.draft/" >> .gitignore
+    info "Updated .gitignore"
+  fi
+fi
+
+# ─── Summary ─────────────────────────────────────────────────────────────────
+echo ""
+echo -e "${GREEN}${BOLD}✓ BMAD initialized for: ${PROJECT_NAME}${NC}"
+echo ""
+echo -e "${BOLD}Created:${NC}"
+echo "  bmad/qf-bmad/workflows/     — lifecycle workflows"
+echo "  bmad/qf-bmad/tasks/         — task definitions"
+echo "  bmad/qf-bmad/templates/     — epic + story templates"
+echo "  bmad/qf-bmad/checklists/    — pre/post work checklists"
+echo "  bmad/qf-bmad/agents/        — BMAD master + specialist stubs"
+echo "  bmad/epics/                 — empty, ready for first epic"
+[[ ! -f "CLAUDE.md" ]] || echo "  CLAUDE.md                   — project instructions (edit this!)"
+echo ""
+echo -e "${BOLD}Next steps:${NC}"
+echo "  1. Edit CLAUDE.md — fill in architecture summary, tech stack, env vars"
+echo "  2. Edit bmad/qf-bmad/agents/active/*.md — customize specialist focus areas"
+echo "  3. Create ARCHITECTURE.md — document your target architecture"
+echo "  4. Open Claude Code and run: /epic <your-first-feature>"
+echo ""
+echo -e "${CYAN}Commands available everywhere:${NC} /bmad /epic /story /implement /explore /think /review /simplify"

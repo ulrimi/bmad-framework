@@ -1,0 +1,31 @@
+project:
+  name: "{{PROJECT_NAME}}"
+  description: "{{PROJECT_DESCRIPTION}}"
+  language: "{{PRIMARY_LANGUAGE}}"
+  version: "1.0.0"
+
+bmad:
+  version: "1.0.0"
+  epic_dir: "bmad/epics"
+  workflow_dir: "bmad/qf-bmad/workflows"
+  agent_dir: "bmad/qf-bmad/agents/active"
+
+commands:
+  test: "{{TEST_COMMAND}}"
+  lint: "{{LINT_COMMAND}}"
+  format_check: "{{FORMAT_CHECK_COMMAND}}"
+  app_launch: "{{APP_LAUNCH_COMMAND}}"
+  env_activate: "{{ENV_ACTIVATE_CMD}}"
+
+quality_gates:
+  pre_work:
+    - env_active
+    - app_launches
+    - tests_pass
+    - lint_clean
+  post_work:
+    - tests_pass
+    - lint_clean
+    - format_clean
+    - app_launches
+    - story_updated

@@ -1,0 +1,139 @@
+# {{PROJECT_NAME}}
+
+{{PROJECT_DESCRIPTION}}
+
+## Project Architecture
+
+See `ARCHITECTURE.md` for the full design plan. Key summary:
+
+{{ARCHITECTURE_SUMMARY}}
+
+---
+
+## BMAD Workflow (MANDATORY)
+
+> [!IMPORTANT]
+> Always use BMAD story-driven development. Never implement directly from high-level requests.
+
+**Before starting any work:**
+
+1. Read `bmad/qf-bmad/workflows/bmad-flow.md` for orchestration phases
+2. Create/consume stories in `bmad/epics/<epic>/stories/`
+3. Attach deliverables and handoff notes to each story
+4. Run QA validation before marking complete
+
+**After completing any story (MANDATORY):**
+
+1. Update story file `Status:` field to `✅ Complete` (or `⚠️ Partial`)
+2. Add `**Completed**: YYYY-MM-DD` to story header
+3. Mark Definition of Done checkboxes as `[x]`
+4. Add Completion Notes section with implementation details
+5. Update epic overview status table
+
+> ⚠️ Work is NOT complete until story status is synchronized with code state.
+
+---
+
+## BMAD Quick Commands
+
+| Command | Compute Level | Purpose |
+|---------|---------------|---------|
+| `/bmad <topic>` | Maximum | Full 5-phase orchestration with parallel agents |
+| `/epic <name>` | Medium | Create new epic with context gathering |
+| `/refine <epic>` | Targeted | Gap analysis on existing epic |
+| `/story <path>` | Focused | Create or implement a story |
+| `/feature <name>` | Setup | Create isolated worktree, switch Claude to work in it |
+| `/implement <path>` | Execution | Full implementation of epic or stories until complete |
+| `/think <question>` | Deep | Sequential reasoning without BMAD structure |
+| `/explore <topic>` | Research | Max-compute codebase exploration |
+| `/review [depth]` | Validation | Code review with auto-detected or specified depth |
+| `/simplify [path]` | Cleanup | Analyze and reduce code complexity |
+
+---
+
+## Tech Stack
+
+| Layer | Technologies |
+|-------|-------------|
+{{TECH_STACK_TABLE}}
+
+---
+
+## Code Style Mandates
+
+{{CODE_STYLE}}
+
+### Linting & Formatting (MANDATORY)
+
+**Pre-commit workflow — run before every commit:**
+
+```bash
+{{LINT_COMMAND}} && {{FORMAT_CHECK_COMMAND}}
+```
+
+---
+
+## Testing Standards
+
+- Use `{{TEST_FRAMEWORK}}` for all tests
+- Mock external services in unit tests — never hit real APIs
+- Test pure logic functions against synthetic data
+
+**Running tests:**
+```bash
+{{TEST_COMMAND}}              # full suite
+{{TEST_COMMAND}} -x           # stop on first fail
+```
+
+---
+
+## Security & Best Practices
+
+1. **No Secrets in Code**: Never hardcode API keys or credentials — use environment variables.
+2. **Input Validation**: Validate all user inputs before passing to core logic.
+3. **No SQL injection**: Use ORM parameters, never string formatting for queries.
+
+---
+
+## Development Commands
+
+```bash
+# Setup
+{{SETUP_COMMANDS}}
+
+# Run app
+{{APP_LAUNCH_COMMAND}}
+
+# Linting
+{{LINT_COMMAND}} && {{FORMAT_CHECK_COMMAND}}
+
+# Tests
+{{TEST_COMMAND}}
+```
+
+---
+
+## Key References
+
+| Doc | Path |
+|-----|------|
+| Architecture | `ARCHITECTURE.md` |
+{{KEY_FILES_TABLE}}
+
+---
+
+## Environment Variables
+
+| Variable | Purpose |
+|----------|---------|
+{{ENV_VARS_TABLE}}
+
+---
+
+## Checklist Before Completing Work
+
+- [ ] Tests pass (`{{TEST_COMMAND}}`)
+- [ ] Linting passes (`{{LINT_COMMAND}}`)
+- [ ] Docstrings on new/modified public functions
+- [ ] BMAD story updated to `✅ Complete` with completion notes
+{{PROJECT_SPECIFIC_CHECKLIST}}
