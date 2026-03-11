@@ -185,10 +185,12 @@ install_dir "${SOURCE_DIR}/commands" "${TARGET_DIR}/commands" "commands/"
 # 2. Templates (project scaffold)
 install_dir "${SOURCE_DIR}/bmad-template" "${TARGET_DIR}/bmad-template" "bmad-template/"
 
-# 3. Scripts (init-bmad)
+# 3. Scripts (init-bmad, claude-feature)
 mkdir -p "${TARGET_DIR}/scripts"
 install_file "${SOURCE_DIR}/scripts/init-bmad" "${TARGET_DIR}/scripts/init-bmad" "scripts/init-bmad"
 chmod +x "${TARGET_DIR}/scripts/init-bmad"
+install_file "${SOURCE_DIR}/scripts/claude-feature" "${TARGET_DIR}/scripts/claude-feature" "scripts/claude-feature"
+chmod +x "${TARGET_DIR}/scripts/claude-feature"
 
 # 4. Global CLAUDE.md
 install_file "${SOURCE_DIR}/CLAUDE.md" "${TARGET_DIR}/CLAUDE.md" "CLAUDE.md"
@@ -226,7 +228,7 @@ echo ""
 info "Verifying installation..."
 ERRORS=0
 
-for item in commands bmad-template scripts/init-bmad CLAUDE.md; do
+for item in commands bmad-template scripts/init-bmad scripts/claude-feature CLAUDE.md; do
   if [[ -e "${TARGET_DIR}/${item}" ]]; then
     success "  ${item}"
   else
@@ -250,7 +252,11 @@ echo "  init-bmad                     # bootstrap BMAD in the project"
 echo "  claude                        # open Claude Code"
 echo "  > /epic my-first-feature      # create your first epic"
 echo ""
-echo -e "${BOLD}Available commands:${NC}"
+echo -e "${BOLD}Shell commands:${NC}"
+echo "  init-bmad              Bootstrap BMAD in any project"
+echo "  claude-feature <name>  Launch Claude Code in an isolated worktree"
+echo ""
+echo -e "${BOLD}Slash commands (inside Claude Code):${NC}"
 echo "  /bmad        Full 5-phase orchestration"
 echo "  /epic        Create new epic"
 echo "  /story       Create or implement a story"

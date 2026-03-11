@@ -45,9 +45,10 @@ Then open a new terminal (or `source ~/.zshrc`).
 
 | Location | Contents |
 |----------|---------|
-| `~/.claude/commands/` | 14 slash-command skill definitions |
+| `~/.claude/commands/` | 17 slash-command skill definitions |
 | `~/.claude/bmad-template/` | Project scaffold templates |
 | `~/.claude/scripts/init-bmad` | Project bootstrapper (added to PATH) |
+| `~/.claude/scripts/claude-feature` | Worktree-based parallel development (added to PATH) |
 | `~/.claude/CLAUDE.md` | Global BMAD instructions for Claude Code |
 
 ### Uninstall
@@ -156,6 +157,81 @@ Repeat until epic is complete
 Each project gets customizable specialist agents that define domain expertise. During `/implement`, the relevant specialist is loaded as a persona to guide implementation with domain-specific quality gates.
 
 Available specialist stubs: `backend`, `frontend`, `data`, `qa`, `infra`. You can create custom specialists by adding `.md` files to `bmad/qf-bmad/agents/active/`.
+
+## Parallel Development with `claude-feature`
+
+`claude-feature` creates isolated git worktrees so you can run multiple Claude Code sessions in parallel — each on its own branch, with its own working directory, sharing the same `.git` backend.
+
+### Basic Usage
+
+```bash
+# Create a worktree and launch Claude Code
+claude-feature my-feature
+# -> Creates project-my-feature/ on feature/my-feature branch
+# -> Symlinks .claude/, CLAUDE.md, bmad/, venv/ from main repo
+# -> Launches Claude Code interactively
+
+# Inside Claude Code:
+> /implement my-feature
+```
+
+### Modes
+
+```bash
+# HITL (default) — interactive, with permission prompts
+claude-feature my-feature
+
+# Yolo — interactive, but skips permission prompts
+claude-feature --yolo my-feature
+
+# Ralph — fully autonomous, skips permissions
+claude-feature --ralph my-feature
+```
+
+### Parallel Loops
+
+Run multiple features simultaneously in separate terminals:
+
+```bash
+# Terminal 1
+claude-feature frontend-redesign
+
+# Terminal 2
+claude-feature api-refactor
+
+# Terminal 3
+claude-feature --ralph test-coverage
+```
+
+Each terminal gets an isolated worktree with its own branch. Changes don't interfere with each other.
+
+### Management
+
+```bash
+claude-feature --list              # Show all active worktrees
+claude-feature --remove my-feature # Remove a specific worktree (with safety checks)
+claude-feature --clean             # Remove all worktrees
+```
+
+### How It Works
+
+1. Creates a git worktree at `../project-name/` (sibling to main repo)
+2. Symlinks shared resources (`.claude/`, `CLAUDE.md`, `bmad/`, `venv/`) so Claude Code has full context
+3. Sets environment variables (`CLAUDE_FEATURE`, `CLAUDE_WORKTREE`, `CLAUDE_MODE`)
+4. Launches `claude` in the worktree directory
+5. After work is done: review changes, push, create PR, merge as normal
+
+### CLI Reference
+
+```
+claude-feature <name>              HITL worktree (feature/<name> branch)
+claude-feature --yolo <name>       HITL worktree (skip permissions)
+claude-feature --ralph <name>      Ralph worktree (ralph/<name> branch, autonomous)
+claude-feature --list              List all active worktrees
+claude-feature --remove <name>     Remove a specific worktree
+claude-feature --clean             Remove all non-main worktrees
+claude-feature --help              Show help
+```
 
 ## Updating
 

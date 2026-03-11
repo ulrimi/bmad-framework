@@ -39,12 +39,14 @@ for item in commands bmad-template; do
   fi
 done
 
-if [[ -e "${TARGET_DIR}/scripts/init-bmad" ]] || [[ -L "${TARGET_DIR}/scripts/init-bmad" ]]; then
-  rm -f "${TARGET_DIR}/scripts/init-bmad"
-  success "Removed scripts/init-bmad"
-  # Remove scripts/ dir if now empty
-  rmdir "${TARGET_DIR}/scripts" 2>/dev/null && success "Removed empty scripts/" || true
-fi
+for script in init-bmad claude-feature; do
+  if [[ -e "${TARGET_DIR}/scripts/${script}" ]] || [[ -L "${TARGET_DIR}/scripts/${script}" ]]; then
+    rm -f "${TARGET_DIR}/scripts/${script}"
+    success "Removed scripts/${script}"
+  fi
+done
+# Remove scripts/ dir if now empty
+rmdir "${TARGET_DIR}/scripts" 2>/dev/null && success "Removed empty scripts/" || true
 
 if [[ -e "${TARGET_DIR}/CLAUDE.md" ]] || [[ -L "${TARGET_DIR}/CLAUDE.md" ]]; then
   rm -f "${TARGET_DIR}/CLAUDE.md"
