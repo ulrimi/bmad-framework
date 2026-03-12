@@ -400,10 +400,9 @@ For EACH story in the queue, execute this complete cycle:
 
 ### Phase 8: Self-Review (MANDATORY)
 
-**Purpose**: Run the `/review` command on your own uncommitted changes. Fix all findings before committing.
+**Purpose**: Run the `/review` command on your own uncommitted changes. Automatically fix meaningful issues before committing.
 
 > **CRITICAL**: This phase runs on EVERY implementation. It is NOT optional.
-> ALL findings — critical, suggestions, AND nits — MUST be addressed before proceeding to commit.
 
 ```yaml
 8.1 Run /review on Uncommitted Changes:
@@ -416,22 +415,22 @@ For EACH story in the queue, execute this complete cycle:
     - Test coverage gaps
 
 8.2 Process Findings:
-    For each finding from the review:
+    Automatically fix medium-severity and above. Nits are informational only.
 
     | Priority | Action |
     |----------|--------|
     | Critical (bugs, security) | Fix immediately |
-    | Suggestions (improvements) | Implement all |
-    | Nits (style, naming) | Implement all |
-
-    The goal is to catch issues BEFORE they reach commit,
-    the same way a human reviewer would.
+    | High (correctness, performance) | Fix immediately |
+    | Medium (improvements, consistency) | Fix |
+    | Nits (style, naming, minor) | Skip — log but do not fix |
 
 8.3 Apply Fixes:
-    For each finding:
+    For each medium+ finding:
     a) Read the affected file
     b) Apply the fix
     c) If the fix is ambiguous, use best judgment aligned with CLAUDE.md style
+
+    Do NOT fix nits — they add churn without meaningful value.
 
 8.4 Re-Validate After Fixes:
     MUST re-run tests and linting after any review fixes:
@@ -448,8 +447,9 @@ For EACH story in the queue, execute this complete cycle:
     Record in story completion notes:
 
     ### Self-Review Results
-    - Findings: [N] total ([X] critical, [Y] suggestions, [Z] nits)
-    - All addressed: Yes/No
+    - Findings: [N] total ([X] critical/high, [Y] medium, [Z] nits)
+    - Fixed: [N] (medium+)
+    - Skipped: [N] nits
 ```
 
 ### Phase 9: Commit
@@ -531,8 +531,9 @@ For EACH story in the queue, execute this complete cycle:
     - Status: [Completed | Skipped (--no-simplify) | No issues found]
 
     ### Self-Review Results (REQUIRED)
-    - Findings: [N] total ([X] critical, [Y] suggestions, [Z] nits)
-    - All addressed: Yes/No
+    - Findings: [N] total ([X] critical/high, [Y] medium, [Z] nits)
+    - Fixed: [N] (medium+)
+    - Skipped: [N] nits
 
     ### Notes
     - [Any implementation decisions or deviations]
