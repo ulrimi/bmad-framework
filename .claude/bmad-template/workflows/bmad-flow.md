@@ -8,9 +8,11 @@ This adapts the BMAD orchestration framework for **{{PROJECT_NAME}}**. The BMAD 
 
 | Agent | Focus Area |
 |-------|------------|
-| **{{SPECIALIST_1_NAME}}** | {{SPECIALIST_1_FOCUS}} |
-| **{{SPECIALIST_2_NAME}}** | {{SPECIALIST_2_FOCUS}} |
-| **{{SPECIALIST_3_NAME}}** | {{SPECIALIST_3_FOCUS}} |
+<!-- TODO: Replace with your active specialists. Example:
+| **Backend Specialist** | API design, business logic, data access |
+| **Frontend Specialist** | UI components, state management, UX |
+| **Data Specialist** | Pipelines, storage, schema design |
+Run /configure to auto-populate from your specialist stubs. -->
 | **QA & Testing** | Testing, validation, edge cases, correctness |
 
 > Edit `bmad/qf-bmad/agents/active/` to match your project's specialist roles.
@@ -91,7 +93,7 @@ bmad/epics/[epic-name]/
 
 ```bash
 # 1. Environment setup
-{{PRE_FLIGHT_ENV}}
+<!-- TODO: e.g., source venv/bin/activate && pip install -r requirements.txt -->
 
 # 2. Existing tests pass
 {{TEST_COMMAND}}

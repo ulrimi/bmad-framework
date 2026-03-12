@@ -52,23 +52,38 @@ PRIMARY_STACK=""
 SPECIALISTS_RAW=""
 NON_INTERACTIVE=false
 DESCRIPTION=""
+ARCH_PATTERN=""
+BACKEND_FRAMEWORK=""
+FRONTEND_FRAMEWORK=""
+DATA_TOOLS=""
+DATABASE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --name)        PROJECT_NAME="$2"; shift 2 ;;
-    --stack)       PRIMARY_STACK="$2"; shift 2 ;;
-    --specialists) SPECIALISTS_RAW="$2"; shift 2 ;;
-    --desc)        DESCRIPTION="$2"; shift 2 ;;
-    --non-interactive) NON_INTERACTIVE=true; shift ;;
+    --name)               PROJECT_NAME="$2"; shift 2 ;;
+    --stack)              PRIMARY_STACK="$2"; shift 2 ;;
+    --specialists)        SPECIALISTS_RAW="$2"; shift 2 ;;
+    --desc)               DESCRIPTION="$2"; shift 2 ;;
+    --arch)               ARCH_PATTERN="$2"; shift 2 ;;
+    --backend-framework)  BACKEND_FRAMEWORK="$2"; shift 2 ;;
+    --frontend-framework) FRONTEND_FRAMEWORK="$2"; shift 2 ;;
+    --data-tools)         DATA_TOOLS="$2"; shift 2 ;;
+    --database)           DATABASE="$2"; shift 2 ;;
+    --non-interactive)    NON_INTERACTIVE=true; shift ;;
     -h|--help)
       echo "Usage: ${SCRIPT_NAME} [options]"
       echo ""
       echo "Options:"
-      echo "  --name NAME            Project name (default: directory name)"
-      echo "  --stack STACK          Primary language: python|typescript|go|other"
-      echo "  --specialists LIST     Comma-separated: backend,frontend,data,qa,infra"
-      echo "  --desc DESCRIPTION     One-line project description"
-      echo "  --non-interactive      Use defaults, no prompts"
+      echo "  --name NAME                 Project name (default: directory name)"
+      echo "  --stack STACK               Primary language: python|typescript|go|other"
+      echo "  --specialists LIST          Comma-separated: backend,frontend,data,qa,infra"
+      echo "  --desc DESCRIPTION          One-line project description"
+      echo "  --arch PATTERN              Architecture: monolith|monorepo|microservices|serverless|library"
+      echo "  --backend-framework NAME    Backend framework (e.g., fastapi, express, gin)"
+      echo "  --frontend-framework NAME   Frontend framework (e.g., react, vue, svelte)"
+      echo "  --data-tools TOOLS          Data tools (e.g., pandas, sqlalchemy, spark)"
+      echo "  --database DB               Database: postgres|mysql|sqlite|mongodb|none"
+      echo "  --non-interactive           Use defaults, no prompts"
       exit 0
       ;;
     *) warn "Unknown option: $1"; shift ;;
@@ -115,6 +130,46 @@ if [[ -z "${SPECIALISTS_RAW}" ]] && [[ "${NON_INTERACTIVE}" == false ]]; then
   read -r SPECIALISTS_RAW
 fi
 SPECIALISTS_RAW="${SPECIALISTS_RAW:-backend,qa}"
+
+# ─── Architecture pattern ────────────────────────────────────────────────────
+if [[ -z "${ARCH_PATTERN}" ]] && [[ "${NON_INTERACTIVE}" == false ]]; then
+  echo ""
+  echo "  1) monolith"
+  echo "  2) monorepo"
+  echo "  3) microservices"
+  echo "  4) serverless"
+  echo "  5) library/package"
+  prompt "Architecture pattern? [1]"
+  read -r arch_choice
+  case "${arch_choice}" in
+    2) ARCH_PATTERN="monorepo" ;;
+    3) ARCH_PATTERN="microservices" ;;
+    4) ARCH_PATTERN="serverless" ;;
+    5) ARCH_PATTERN="library" ;;
+    *) ARCH_PATTERN="monolith" ;;
+  esac
+fi
+ARCH_PATTERN="${ARCH_PATTERN:-monolith}"
+
+# ─── Database ────────────────────────────────────────────────────────────────
+if [[ -z "${DATABASE}" ]] && [[ "${NON_INTERACTIVE}" == false ]]; then
+  echo ""
+  echo "  1) postgres"
+  echo "  2) mysql"
+  echo "  3) sqlite"
+  echo "  4) mongodb"
+  echo "  5) none"
+  prompt "Database? [5]"
+  read -r db_choice
+  case "${db_choice}" in
+    1) DATABASE="postgres" ;;
+    2) DATABASE="mysql" ;;
+    3) DATABASE="sqlite" ;;
+    4) DATABASE="mongodb" ;;
+    *) DATABASE="none" ;;
+  esac
+fi
+DATABASE="${DATABASE:-none}"
 
 # ─── Stack defaults ────────────────────────────────────────────────────────────
 case "${PRIMARY_STACK}" in
@@ -164,6 +219,96 @@ esac
 IFS=',' read -ra SPECIALIST_LIST <<< "${SPECIALISTS_RAW}"
 SPECIALIST_LIST=("${SPECIALIST_LIST[@]// /}")  # trim spaces
 
+# ─── Framework-specific prompts (conditional on specialists) ─────────────────
+if [[ "${NON_INTERACTIVE}" == false ]]; then
+  for spec in "${SPECIALIST_LIST[@]}"; do
+    case "${spec}" in
+      backend)
+        if [[ -z "${BACKEND_FRAMEWORK}" ]]; then
+          echo ""
+          prompt "Backend framework? (e.g., fastapi, django, express, gin) [${PRIMARY_STACK} default]"
+          read -r BACKEND_FRAMEWORK
+        fi
+        ;;
+      frontend)
+        if [[ -z "${FRONTEND_FRAMEWORK}" ]]; then
+          echo ""
+          prompt "Frontend framework? (e.g., react, vue, angular, svelte, nextjs) []"
+          read -r FRONTEND_FRAMEWORK
+        fi
+        ;;
+      data)
+        if [[ -z "${DATA_TOOLS}" ]]; then
+          echo ""
+          prompt "Data tools? (e.g., pandas, sqlalchemy, spark, dbt) []"
+          read -r DATA_TOOLS
+        fi
+        ;;
+    esac
+  done
+fi
+
+# Set defaults based on stack if not provided
+if [[ -z "${BACKEND_FRAMEWORK}" ]]; then
+  case "${PRIMARY_STACK}" in
+    python)     BACKEND_FRAMEWORK="Python" ;;
+    typescript) BACKEND_FRAMEWORK="TypeScript" ;;
+    go)         BACKEND_FRAMEWORK="Go" ;;
+    *)          BACKEND_FRAMEWORK="${PRIMARY_STACK}" ;;
+  esac
+fi
+FRONTEND_FRAMEWORK="${FRONTEND_FRAMEWORK:-}"
+DATA_TOOLS="${DATA_TOOLS:-}"
+
+# ─── Auto-detect key directories ─────────────────────────────────────────────
+DETECTED_DIRS=""
+for dir in src server web lib app api cmd pkg internal tests test spec public; do
+  [[ -d "${dir}" ]] && DETECTED_DIRS="${DETECTED_DIRS} ${dir}/"
+done
+
+if [[ -n "${DETECTED_DIRS}" ]] && [[ "${NON_INTERACTIVE}" == false ]]; then
+  info "Detected directories:${DETECTED_DIRS}"
+  prompt "Include in key files? [Y/n]"
+  read -r confirm
+  [[ "${confirm}" =~ ^[Nn]$ ]] && DETECTED_DIRS=""
+fi
+
+# ─── Portable capitalize helper ───────────────────────────────────────────────
+capitalize() { echo "$1" | awk '{print toupper(substr($0,1,1)) substr($0,2)}'; }
+
+# ─── Build architecture summary ──────────────────────────────────────────────
+ARCH_CAP="$(capitalize "${ARCH_PATTERN}")"
+ARCH_DESC="${ARCH_CAP} ${PRIMARY_STACK} application"
+[[ "${BACKEND_FRAMEWORK}" != "${PRIMARY_STACK}" ]] && [[ "${BACKEND_FRAMEWORK}" != "Python" ]] && [[ "${BACKEND_FRAMEWORK}" != "TypeScript" ]] && [[ "${BACKEND_FRAMEWORK}" != "Go" ]] && ARCH_DESC="${ARCH_CAP} ${BACKEND_FRAMEWORK} application"
+[[ "${DATABASE}" != "none" ]] && ARCH_DESC="${ARCH_DESC} with ${DATABASE}"
+ARCH_DESC="${ARCH_DESC}."
+
+# Build tech stack table rows
+TECH_STACK_ROWS="| Language | ${PRIMARY_STACK} |"
+[[ -n "${BACKEND_FRAMEWORK}" ]] && TECH_STACK_ROWS="${TECH_STACK_ROWS}\n| Backend  | ${BACKEND_FRAMEWORK} |"
+[[ -n "${FRONTEND_FRAMEWORK}" ]] && TECH_STACK_ROWS="${TECH_STACK_ROWS}\n| Frontend | ${FRONTEND_FRAMEWORK} |"
+[[ "${DATABASE}" != "none" ]] && TECH_STACK_ROWS="${TECH_STACK_ROWS}\n| Database | ${DATABASE} |"
+[[ -n "${DATA_TOOLS}" ]] && TECH_STACK_ROWS="${TECH_STACK_ROWS}\n| Data     | ${DATA_TOOLS} |"
+
+# Build key files table rows from detected dirs
+KEY_FILES_ROWS=""
+_kf_sep=""
+for dir in ${DETECTED_DIRS}; do
+  case "${dir}" in
+    src/)      KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| Source Code | \`${dir}\` |" ;;
+    server/)   KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| Server | \`${dir}\` |" ;;
+    web/)      KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| Web Frontend | \`${dir}\` |" ;;
+    lib/)      KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| Library | \`${dir}\` |" ;;
+    app/)      KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| Application | \`${dir}\` |" ;;
+    api/)      KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| API | \`${dir}\` |" ;;
+    cmd/)      KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| CLI/Commands | \`${dir}\` |" ;;
+    tests/|test/|spec/) KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| Tests | \`${dir}\` |" ;;
+    public/)   KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| Static Assets | \`${dir}\` |" ;;
+    *)         KEY_FILES_ROWS="${KEY_FILES_ROWS}${_kf_sep}| ${dir%/} | \`${dir}\` |" ;;
+  esac
+  _kf_sep="\n"
+done
+
 # ─── Create directory structure ────────────────────────────────────────────────
 info "Creating BMAD directory structure..."
 mkdir -p bmad/qf-bmad/workflows
@@ -201,6 +346,42 @@ for f in bmad/qf-bmad/tasks/*.md; do
     "${f}" && rm "${f}.bak"
 done
 
+# Replace placeholders in workflow files
+for f in bmad/qf-bmad/workflows/*.md; do
+  sed -i.bak \
+    -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+    -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
+    -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
+    -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
+    "${f}" && rm "${f}.bak"
+done
+
+# Replace specialist table in bmad-flow.md with actual specialist list
+if [[ -f "bmad/qf-bmad/workflows/bmad-flow.md" ]]; then
+  FLOW_TABLE_TMP=$(mktemp)
+  for spec in "${SPECIALIST_LIST[@]}"; do
+    spec_cap="$(capitalize "${spec}")"
+    echo "| **${spec_cap} Specialist** | ${spec_cap} domain expertise |" >> "${FLOW_TABLE_TMP}"
+  done
+
+  awk -v table_file="${FLOW_TABLE_TMP}" '
+    /<!-- TODO:.*Replace with your active specialists/ {
+      while ((getline line < table_file) > 0) print line
+      close(table_file)
+      # Consume rest of multi-line HTML comment
+      if ($0 !~ /-->/) { while (getline > 0 && $0 !~ /-->/) {} }
+      next
+    }
+    { print }
+  ' "bmad/qf-bmad/workflows/bmad-flow.md" > "bmad/qf-bmad/workflows/bmad-flow.md.tmp" && \
+    mv "bmad/qf-bmad/workflows/bmad-flow.md.tmp" "bmad/qf-bmad/workflows/bmad-flow.md"
+
+  rm -f "${FLOW_TABLE_TMP}"
+fi
+
+# ─── Derive test framework name ─────────────────────────────────────────────
+TEST_FRAMEWORK="${TEST_CMD%% *}"
+
 # ─── Copy and customize specialist agents ──────────────────────────────────────
 info "Setting up specialist agents: ${SPECIALISTS_RAW}..."
 for spec in "${SPECIALIST_LIST[@]}"; do
@@ -211,8 +392,64 @@ for spec in "${SPECIALIST_LIST[@]}"; do
       warn "  Skipping ${spec}-specialist.md (already exists, preserving customizations)"
     else
       cp "${stub_file}" "${dest}"
-      # Replace project name placeholder
-      sed -i.bak "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" "${dest}" && rm "${dest}.bak"
+      # Replace project name, test framework, and specialist-specific placeholders
+      SPEC_TECH="" SPEC_FOCUS="" SPEC_FILES=""
+      case "${spec}" in
+        backend)
+          SPEC_TECH="${BACKEND_FRAMEWORK}"
+          SPEC_FOCUS="${PROJECT_NAME} backend services"
+          SPEC_FILES="$(echo "${DETECTED_DIRS}" | tr ' ' '\n' | grep -E '^(src|server|app|api|lib|cmd)/' | tr '\n' ', ' | sed 's/,$//' || true)"
+          ;;
+        frontend)
+          SPEC_TECH="${FRONTEND_FRAMEWORK:-${PRIMARY_STACK}}"
+          SPEC_FOCUS="${PROJECT_NAME} frontend UI"
+          SPEC_FILES="$(echo "${DETECTED_DIRS}" | tr ' ' '\n' | grep -E '^(web|public|src|app)/' | tr '\n' ', ' | sed 's/,$//' || true)"
+          ;;
+        data)
+          SPEC_TECH="${DATA_TOOLS:-${PRIMARY_STACK}}"
+          SPEC_FOCUS="${PROJECT_NAME} data pipelines and storage"
+          SPEC_FILES="$(echo "${DETECTED_DIRS}" | tr ' ' '\n' | grep -E '^(data|src|lib)/' | tr '\n' ', ' | sed 's/,$//' || true)"
+          ;;
+        infra)
+          SPEC_TECH="Infrastructure"
+          SPEC_FOCUS="${PROJECT_NAME} deployment and operations"
+          SPEC_FILES="Dockerfile, docker-compose.yml, terraform/, .github/workflows/"
+          ;;
+      esac
+
+      sed -i.bak \
+        -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+        -e "s|{{TEST_FRAMEWORK}}|${TEST_FRAMEWORK}|g" \
+        "${dest}" && rm "${dest}.bak"
+
+      # Replace specialist-specific TODO markers if we have values
+      if [[ -n "${SPEC_TECH}" ]]; then
+        UPPER_SPEC="$(echo "${spec}" | tr '[:lower:]' '[:upper:]')"
+        sed -i.bak \
+          -e "s|<!-- TODO: e.g.,.* --> implementation patterns|${SPEC_TECH} implementation patterns|g" \
+          -e "s|<!-- TODO: e.g.,.* --> components and state|${SPEC_TECH} components and state|g" \
+          -e "s|<!-- TODO: e.g.,.* --> data processing|${SPEC_TECH} data processing|g" \
+          -e "s|<!-- TODO: e.g.,.* --> deployment and configuration|${SPEC_TECH} deployment and configuration|g" \
+          "${dest}" && rm "${dest}.bak"
+      fi
+      if [[ -n "${SPEC_FOCUS}" ]]; then
+        sed -i.bak \
+          -e "s|<!-- TODO: e.g.,.* domain expertise -->|${SPEC_FOCUS}|g" \
+          -e "s|<!-- TODO: e.g.,.* API services.*-->|${SPEC_FOCUS}|g" \
+          -e "s|<!-- TODO: e.g.,.* UI components.*-->|${SPEC_FOCUS}|g" \
+          -e "s|<!-- TODO: e.g.,.* Data pipelines.*-->|${SPEC_FOCUS}|g" \
+          -e "s|<!-- TODO: e.g.,.* Deployment.*-->|${SPEC_FOCUS}|g" \
+          "${dest}" && rm "${dest}.bak"
+      fi
+      if [[ -n "${SPEC_FILES}" ]]; then
+        sed -i.bak \
+          -e "s|<!-- TODO: e.g.,.* app/api/.*-->|${SPEC_FILES}|g" \
+          -e "s|<!-- TODO: e.g.,.* src/components/.*-->|${SPEC_FILES}|g" \
+          -e "s|<!-- TODO: e.g.,.* app/data/.*-->|${SPEC_FILES}|g" \
+          -e "s|<!-- TODO: e.g.,.* Dockerfile.*-->|${SPEC_FILES}|g" \
+          "${dest}" && rm "${dest}.bak"
+      fi
+
       success "  Created ${dest}"
     fi
   else
@@ -235,9 +472,6 @@ EOF
   fi
 done
 
-# ─── Portable capitalize helper ───────────────────────────────────────────────
-capitalize() { echo "$1" | awk '{print toupper(substr($0,1,1)) substr($0,2)}'; }
-
 # ─── Create BMAD Master ────────────────────────────────────────────────────────
 if [[ ! -f "bmad/qf-bmad/agents/bmad-master.md" ]]; then
   info "Creating BMAD Master agent..."
@@ -249,7 +483,42 @@ if [[ ! -f "bmad/qf-bmad/agents/bmad-master.md" ]]; then
     -e "s|{{PROJECT_DOMAIN}}|${PROJECT_NAME}|g" \
     "bmad/qf-bmad/agents/bmad-master.md" && rm "bmad/qf-bmad/agents/bmad-master.md.bak"
 
-  # Append specialist list to BMAD master
+  # Build specialist content files for awk-based replacement
+  SPEC_LIST_TMP=$(mktemp)
+  SPEC_TABLE_TMP=$(mktemp)
+
+  for spec in "${SPECIALIST_LIST[@]}"; do
+    echo "    - ${spec}-specialist.md" >> "${SPEC_LIST_TMP}"
+  done
+
+  {
+    echo "| Agent | Focus Area |"
+    echo "|-------|------------|"
+    for spec in "${SPECIALIST_LIST[@]}"; do
+      spec_cap="$(capitalize "${spec}")"
+      echo "| **${spec_cap} Specialist** | ${spec_cap} domain expertise |"
+    done
+  } > "${SPEC_TABLE_TMP}"
+
+  # Replace {{SPECIALIST_AGENTS_LIST}} and {{SPECIALIST_AGENTS_TABLE}} using awk
+  awk -v list_file="${SPEC_LIST_TMP}" -v table_file="${SPEC_TABLE_TMP}" '
+    /\{\{SPECIALIST_AGENTS_LIST\}\}/ {
+      while ((getline line < list_file) > 0) print line
+      close(list_file)
+      next
+    }
+    /\{\{SPECIALIST_AGENTS_TABLE\}\}/ {
+      while ((getline line < table_file) > 0) print line
+      close(table_file)
+      next
+    }
+    { print }
+  ' "bmad/qf-bmad/agents/bmad-master.md" > "bmad/qf-bmad/agents/bmad-master.md.tmp" && \
+    mv "bmad/qf-bmad/agents/bmad-master.md.tmp" "bmad/qf-bmad/agents/bmad-master.md"
+
+  rm -f "${SPEC_LIST_TMP}" "${SPEC_TABLE_TMP}"
+
+  # Append specialist reference list to BMAD master
   {
     echo ""
     echo "### Active Specialists"
@@ -295,8 +564,22 @@ else
     -e "s|{{FORMAT_CHECK_COMMAND}}|${FORMAT_CHECK_CMD}|g" \
     -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
     -e "s|{{SETUP_COMMANDS}}|${SETUP_CMDS}|g" \
+    -e "s|{{ARCHITECTURE_SUMMARY}}|${ARCH_DESC}|g" \
     CLAUDE.md && rm CLAUDE.md.bak
-  success "CLAUDE.md created — edit it to add architecture summary, tech stack, and env vars."
+
+  # Replace multi-line placeholders using Python for cross-platform reliability
+  python3 -c "
+import sys
+content = open('CLAUDE.md').read()
+tech = '''$(printf '%b' "${TECH_STACK_ROWS}")'''
+keys = '''$(printf '%b' "${KEY_FILES_ROWS}")'''
+content = content.replace('{{TECH_STACK_TABLE}}', tech)
+if keys.strip():
+    content = content.replace('{{KEY_FILES_TABLE}}', keys)
+open('CLAUDE.md', 'w').write(content)
+"
+
+  success "CLAUDE.md created with detected settings. Review and customize as needed."
 fi
 
 # ─── Update .gitignore ────────────────────────────────────────────────────────
@@ -309,9 +592,33 @@ if [[ -f ".gitignore" ]]; then
   fi
 fi
 
+# ─── Catchall: convert remaining {{PLACEHOLDERS}} to TODO markers ─────────────
+info "Checking for remaining placeholders..."
+REMAINING=0
+for f in CLAUDE.md bmad/qf-bmad/agents/*.md bmad/qf-bmad/agents/active/*.md bmad/qf-bmad/workflows/*.md bmad/qf-bmad/tasks/*.md bmad/qf-bmad/checklists/*.md bmad/qf-bmad/*.yaml; do
+  if [[ -f "${f}" ]] && grep -qE '\{\{[A-Z0-9_]+\}\}' "${f}" 2>/dev/null; then
+    sed -i.bak -E 's/\{\{([A-Z0-9_]+)\}\}/<!-- TODO: Fill in \1. Run \/configure to auto-detect. -->/g' "${f}" && rm -f "${f}.bak"
+    count=$(grep -c 'TODO: Fill in' "${f}" 2>/dev/null || true)
+    REMAINING=$((REMAINING + count))
+  fi
+done
+
+if [[ ${REMAINING} -gt 0 ]]; then
+  warn "${REMAINING} TODO markers remaining — /configure can auto-fill most of them"
+else
+  success "All placeholders filled!"
+fi
+
 # ─── Summary ─────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}${BOLD}✓ BMAD initialized for: ${PROJECT_NAME}${NC}"
+echo ""
+echo -e "${BOLD}Configuration:${NC}"
+echo "  Project:       ${PROJECT_NAME}"
+echo "  Stack:         ${PRIMARY_STACK}${BACKEND_FRAMEWORK:+ ($BACKEND_FRAMEWORK)}"
+echo "  Architecture:  ${ARCH_PATTERN}"
+echo "  Database:      ${DATABASE}"
+echo "  Specialists:   ${SPECIALISTS_RAW}"
 echo ""
 echo -e "${BOLD}Created:${NC}"
 echo "  bmad/qf-bmad/workflows/     — lifecycle workflows"
@@ -323,9 +630,10 @@ echo "  bmad/epics/                 — empty, ready for first epic"
 [[ ! -f "CLAUDE.md" ]] || echo "  CLAUDE.md                   — project instructions (edit this!)"
 echo ""
 echo -e "${BOLD}Next steps:${NC}"
-echo "  1. Edit CLAUDE.md — fill in architecture summary, tech stack, env vars"
-echo "  2. Edit bmad/qf-bmad/agents/active/*.md — customize specialist focus areas"
-echo "  3. Create ARCHITECTURE.md — document your target architecture"
-echo "  4. Open Claude Code and run: /epic <your-first-feature>"
+echo "  1. Open Claude Code:  claude"
+echo "  2. Auto-configure:    /configure"
+echo "  3. Review settings:   edit CLAUDE.md"
+echo "  4. Architecture doc:  create ARCHITECTURE.md"
+echo "  5. Start building:    /epic <your-first-feature>"
 echo ""
-echo -e "${CYAN}Commands available everywhere:${NC} /bmad /epic /story /implement /explore /think /review /simplify"
+echo -e "${CYAN}Commands available everywhere:${NC} /bmad /epic /story /implement /explore /think /review /simplify /configure"

@@ -47,6 +47,7 @@ See `ARCHITECTURE.md` for the full design plan. Key summary:
 | `/think <question>` | Deep | Sequential reasoning without BMAD structure |
 | `/explore <topic>` | Research | Max-compute codebase exploration |
 | `/review [depth]` | Validation | Code review with auto-detected or specified depth |
+| `/configure` | Setup | Auto-detect project settings from codebase |
 | `/simplify [path]` | Cleanup | Analyze and reduce code complexity |
 
 ---
@@ -61,7 +62,12 @@ See `ARCHITECTURE.md` for the full design plan. Key summary:
 
 ## Code Style Mandates
 
-{{CODE_STYLE}}
+<!-- TODO: Define your code style rules. Example:
+- Use type hints on all function signatures
+- Google-style docstrings on public functions
+- Max line length: 120 characters
+- Prefer composition over inheritance
+Run /configure to auto-detect from linter configs. -->
 
 ### Linting & Formatting (MANDATORY)
 
@@ -126,7 +132,11 @@ See `ARCHITECTURE.md` for the full design plan. Key summary:
 
 | Variable | Purpose |
 |----------|---------|
-{{ENV_VARS_TABLE}}
+<!-- TODO: List your environment variables. Example:
+| DATABASE_URL | PostgreSQL connection string |
+| SECRET_KEY   | JWT signing key              |
+| REDIS_URL    | Cache/queue connection        |
+Run /configure to auto-detect from .env files and code. -->
 
 ---
 
@@ -136,4 +146,8 @@ See `ARCHITECTURE.md` for the full design plan. Key summary:
 - [ ] Linting passes (`{{LINT_COMMAND}}`)
 - [ ] Docstrings on new/modified public functions
 - [ ] BMAD story updated to `✅ Complete` with completion notes
-{{PROJECT_SPECIFIC_CHECKLIST}}
+<!-- TODO: Add project-specific checklist items. Example:
+- [ ] Database migrations created (`alembic revision --autogenerate`)
+- [ ] API docs updated (OpenAPI schema)
+- [ ] Environment variables documented in .env.example
+Remove this comment and add your items above. -->

@@ -18,6 +18,7 @@ Always: Epic → Stories → Implement with `/implement`.
 | `/explore <topic>` | Deep codebase exploration |
 | `/think <question>` | Sequential reasoning without BMAD structure |
 | `/review [depth]` | Code review with auto-detected depth |
+| `/configure` | Auto-detect project settings from codebase |
 | `/simplify [path]` | Analyze and reduce code complexity |
 
 ## Auto-Agent Deployment
@@ -50,4 +51,4 @@ git init  # if not already a git repo
 init-bmad
 ```
 
-This scaffolds `bmad/`, `CLAUDE.md`, and specialist agents. Then edit `CLAUDE.md` and `ARCHITECTURE.md` for project specifics.
+This scaffolds `bmad/`, `CLAUDE.md`, and specialist agents. Then run `/configure` in Claude Code to auto-detect project settings, and edit `ARCHITECTURE.md` for project specifics.
