@@ -2,6 +2,25 @@
 
 **Story-driven development for Claude Code.** BMAD (Breakthrough Method of Agile AI-Driven Development) structures AI-assisted development through epics, stories, specialist agents, and quality gates — enforcing a disciplined workflow that scales across any project.
 
+## Quick Start
+
+```bash
+# 1. Install the framework
+git clone https://github.com/ulrimi/bmad-framework.git ~/bmad-framework
+cd ~/bmad-framework && ./install.sh
+source ~/.zshrc   # or open a new terminal
+
+# 2. Bootstrap BMAD in your project
+cd /path/to/your-project
+git init           # if needed
+init-bmad          # interactive — asks about your stack, architecture, frameworks
+
+# 3. Open Claude Code and auto-configure
+claude
+> /configure       # auto-detects settings from your codebase
+> /epic my-feature # start building
+```
+
 ## What It Does
 
 BMAD adds slash commands to Claude Code that orchestrate multi-agent, story-driven development:
@@ -12,6 +31,7 @@ BMAD adds slash commands to Claude Code that orchestrate multi-agent, story-driv
 | `/epic <name>` | Create new epic with context gathering |
 | `/story <path>` | Create or implement a story |
 | `/implement <path>` | Execute stories to completion (10-phase cycle) |
+| `/configure` | Auto-detect project settings from codebase |
 | `/explore <topic>` | Deep codebase exploration |
 | `/think <question>` | Sequential reasoning without BMAD structure |
 | `/review [depth]` | Code review with auto-detected depth |
@@ -32,7 +52,7 @@ BMAD adds slash commands to Claude Code that orchestrate multi-agent, story-driv
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/bmad-framework.git ~/bmad-framework
+git clone https://github.com/ulrimi/bmad-framework.git ~/bmad-framework
 cd ~/bmad-framework
 ./install.sh          # symlink mode (recommended — git pull updates everything)
 # or
@@ -45,7 +65,7 @@ Then open a new terminal (or `source ~/.zshrc`).
 
 | Location | Contents |
 |----------|---------|
-| `~/.claude/commands/` | 17 slash-command skill definitions |
+| `~/.claude/commands/` | 18 slash-command skill definitions |
 | `~/.claude/bmad-template/` | Project scaffold templates |
 | `~/.claude/scripts/init-bmad` | Project bootstrapper (added to PATH) |
 | `~/.claude/scripts/claude-feature` | Worktree-based parallel development (added to PATH) |
@@ -73,6 +93,10 @@ init-bmad                   # interactive setup
 - **Description** (one-liner)
 - **Language/stack** (Python, TypeScript, Go, or other — sets up lint/test/format commands)
 - **Specialists** (backend, frontend, data, qa, infra — creates agent personas)
+- **Architecture pattern** (monolith, monorepo, microservices, serverless, library)
+- **Frameworks** (conditional on specialists — e.g., FastAPI for backend, React for frontend)
+- **Database** (postgres, mysql, sqlite, mongodb, dynamodb, or none)
+- **Key directories** (auto-detected from existing code)
 
 ### What It Creates
 
@@ -94,16 +118,19 @@ your-project/
 
 ### After Bootstrap
 
-1. **Edit `CLAUDE.md`** — Fill in architecture summary, tech stack details, code style, env vars
-2. **Edit specialist agents** — Customize `bmad/qf-bmad/agents/active/*.md` for your domain
-3. **Create `ARCHITECTURE.md`** (optional) — Document target architecture
-4. **Start working:**
+1. **Open Claude Code** and run `/configure` — auto-detects frameworks, env vars, code style, and key files from your codebase
+2. **Review `CLAUDE.md`** — verify and adjust the detected settings
+3. **Create `ARCHITECTURE.md`** (optional) — document your target architecture
+4. **Start building:**
 
 ```bash
 claude
-> /epic my-first-feature
+> /configure                # auto-detect project settings
+> /epic my-first-feature    # create your first epic
 > /implement my-first-feature
 ```
+
+`/configure` analyzes your dependency files, directory structure, linter configs, and environment variable usage to fill remaining TODO markers in CLAUDE.md and specialist agent files. Run it again after adding new dependencies.
 
 ## CLI Options
 
@@ -122,8 +149,13 @@ claude
 ```
 init-bmad [--name NAME] [--stack python|typescript|go|other]
           [--specialists LIST] [--desc DESCRIPTION]
+          [--arch monolith|monorepo|microservices|serverless|library]
+          [--backend-framework FRAMEWORK] [--frontend-framework FRAMEWORK]
+          [--data-tools TOOLS] [--database DB]
           [--non-interactive]
 ```
+
+All flags are optional. In interactive mode, you'll be prompted for anything not provided via flags. In `--non-interactive` mode, sensible defaults are used.
 
 ## How BMAD Works
 
@@ -257,11 +289,11 @@ Project-level files (`bmad/` directories, project `CLAUDE.md`) are never touched
 
 ```bash
 # Machine 1: Clone and install
-git clone https://github.com/YOUR_USERNAME/bmad-framework.git ~/bmad-framework
+git clone https://github.com/ulrimi/bmad-framework.git ~/bmad-framework
 cd ~/bmad-framework && ./install.sh
 
 # Machine 2: Same thing
-git clone https://github.com/YOUR_USERNAME/bmad-framework.git ~/bmad-framework
+git clone https://github.com/ulrimi/bmad-framework.git ~/bmad-framework
 cd ~/bmad-framework && ./install.sh
 ```
 
