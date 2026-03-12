@@ -130,9 +130,9 @@ Before starting, show the user what will be implemented:
 
 | # | Story | Status | Specialist |
 |---|-------|--------|------------|
-| 1 | story-001-parquet-cache.md | Ready | data-pipeline-specialist |
-| 2 | story-002-strategy-refactor.md | Ready | strategy-engine-specialist |
-| 3 | story-003-ui-updates.md | Blocked (needs 001, 002) | streamlit-ui-specialist |
+| 1 | story-001-db-models.md | Ready | backend-specialist |
+| 2 | story-002-api-endpoints.md | Ready | backend-specialist |
+| 3 | story-003-ui-updates.md | Blocked (needs 001, 002) | frontend-specialist |
 
 **Estimated scope**: 3 stories, ~X files
 **Branch**: feature/[epic-name]
@@ -157,10 +157,9 @@ For EACH story in the queue, execute this complete cycle:
 | 5 | Testing | ✅ | Run existing tests, write new tests |
 | 6 | Validation & Linting | ✅ | Lint, type check, verify acceptance criteria |
 | **7** | **Code Simplification** | **✅ MANDATORY** | **Review for over-engineering, apply Boy Scout Rule** |
-| **8** | **CodeRabbit Review** | **✅ MANDATORY** | **Run CodeRabbit AI review, accept ALL suggestions including nits** |
-| 9 | Commit | ✅ | Stage, commit with gate check for Phases 7 & 8 |
-| 10 | Story Completion | ✅ | Update story file with completion notes |
-| **11** | **Push & Create PR** | **✅ AUTO** | **Push branch, create GitHub PR (runs after ALL stories complete)** |
+| 8 | Commit | ✅ | Stage, commit with gate check for Phase 7 |
+| 9 | Story Completion | ✅ | Update story file with completion notes |
+| **10** | **Push & Create PR** | **✅ AUTO** | **Push branch, create GitHub PR (runs after ALL stories complete)** |
 
 ---
 
@@ -177,16 +176,9 @@ For EACH story in the queue, execute this complete cycle:
     - If blocked: skip and move to next story, or ask user
 
 1.3 Load Specialist Persona:
-    - Match story domain to specialist file
+    - Match story domain to specialist file in bmad/qf-bmad/agents/active/
     - Read specialist .md and adopt expertise
-
-    | Domain Keywords | Specialist |
-    |-----------------|------------|
-    | strategy, backtest, signal, entry, exit, opening range | strategy-engine-specialist.md |
-    | UI, Streamlit, sidebar, chart, render | streamlit-ui-specialist.md |
-    | data, Polygon, cache, Parquet, calendar | data-pipeline-specialist.md |
-    | PnL, metric, equity curve, reporting, analytics | analytics-reporting-specialist.md |
-    | test, QA, validation, fixture | qa-testing-specialist.md |
+    - Match based on story keywords and specialist domain descriptions
 ```
 
 ### Phase 2: Exploration (3-5 min)
@@ -228,10 +220,10 @@ For EACH story in the queue, execute this complete cycle:
 
 3.2 Show User the Plan:
     "I will make these changes in order:
-     1. Modify data_layer.py - Add Parquet cache layer
-     2. Modify strategy_engine.py - Refactor opening range logic
-     3. Modify pnl_calculator.py - Add equity curve calculation
-     4. Create tests/test_cache.py - 5 test cases
+     1. Modify models.py - Add new data model
+     2. Modify service.py - Add business logic
+     3. Modify router.py - Add API endpoint
+     4. Create tests/test_feature.py - 5 test cases
 
      Proceed? [Y/n/modify]"
 ```
@@ -273,27 +265,14 @@ For EACH story in the queue, execute this complete cycle:
 
 ```yaml
 5.1 Run Existing Tests (ensure no regression):
-    IMPORTANT: pytest.ini already has -q --tb=short defaults.
-    Do NOT add extra flags. Use Bash timeout=180000.
-    ```bash
-    pytest
-    ```
+    Use the test command from CLAUDE.md. Use Bash timeout=180000.
     If failures: FIX THEM before proceeding.
-    If Bash times out: DO NOT retry with different flags.
-    Instead, run only the test files relevant to your changes:
-    ```bash
-    pytest tests/test_[relevant].py -x
-    ```
+    If Bash times out: run only the test files relevant to your changes.
 
-    TIMEOUT / SUMMARY CAVEAT (CRITICAL - prevents test-loop time sink):
-    The pytest summary line (e.g., "1854 passed in 145.23s") sometimes gets
-    cut off by the Bash timeout even though ALL tests visibly passed.
+    TIMEOUT CAVEAT (prevents test-loop time sink):
     If the output shows tests running with 0 failures and only pass/skip
-    results, ACCEPT THAT AS A PASS. Do NOT:
-    - Re-run tests to "get the summary line"
-    - Tail the output looking for the summary
-    - Loop retrying with different flags
-    The visible test results ARE the result. No summary line needed.
+    results, ACCEPT THAT AS A PASS even if the summary line is cut off.
+    Do NOT re-run tests just to "get the summary line".
 
 5.2 Write New Tests (per story requirements):
     - Unit tests for new functions
@@ -315,11 +294,9 @@ For EACH story in the queue, execute this complete cycle:
 ### Phase 6: Validation & Linting
 
 ```yaml
-6.1 Python Linting:
-    ```bash
-    ruff check . && ruff format --check .
-    ```
-    If failures: FIX with `ruff check --fix .` or manual edits
+6.1 Linting:
+    Run the lint and format-check commands from CLAUDE.md.
+    If failures: auto-fix where possible, manual edits otherwise.
 
 6.2 Acceptance Criteria Verification:
     Go through EACH acceptance criterion in the story:
@@ -397,12 +374,10 @@ For EACH story in the queue, execute this complete cycle:
 7.4 Re-Validate After Simplification:
     MUST re-run validation after ANY simplification changes:
 
-    # Re-run tests (use Bash timeout=180000, no extra flags)
-    # Apply same TIMEOUT/SUMMARY CAVEAT from Phase 5.1
-    pytest
+    # Re-run tests (use Bash timeout=180000)
+    # Apply same TIMEOUT CAVEAT from Phase 5.1
 
-    # Re-run linting
-    ruff check . && ruff format --check .
+    # Re-run linting (use lint commands from CLAUDE.md)
 
     If failures:
       - Identify which simplification broke things
@@ -422,106 +397,25 @@ For EACH story in the queue, execute this complete cycle:
 
 **IMPORTANT**: Never skip this phase silently. If skipping due to `--no-simplify`, explicitly log: "Simplification skipped per --no-simplify flag."
 
-### Phase 8: CodeRabbit Review (MANDATORY)
-
-**Purpose**: Automated code review via CodeRabbit AI. ALL suggestions are accepted, including nits.
-
-> **CRITICAL**: This phase runs on EVERY implementation. It is NOT optional.
-> ALL findings — critical, suggestions, AND nits — MUST be addressed before proceeding to commit.
+### Phase 8: Commit
 
 ```yaml
-8.1 Run CodeRabbit Review:
-    Run review on all uncommitted changes:
-
-    ```bash
-    coderabbit review --plain -t uncommitted
-    ```
-
-    If CodeRabbit CLI is not installed or not authenticated,
-    inform the user and pause until resolved.
-
-8.2 Process ALL Findings:
-    Parse the review output and create a task list.
-    Categorize by severity but treat ALL as action items:
-
-    | Priority | Category | Action |
-    |----------|----------|--------|
-    | 1 | Critical | Security, bugs — fix immediately |
-    | 2 | Suggestions | Improvements — implement all |
-    | 3 | Nits | Style, naming, minor — implement all |
-    | 4 | Positive | Good patterns — no action needed |
-
-    IMPORTANT: Unlike a typical review where nits are optional,
-    this workflow requires accepting ALL suggestions. The goal is
-    to automate the code review loop that a human reviewer would do.
-
-8.3 Apply ALL Fixes:
-    For each finding (excluding "Positive" acknowledgments):
-
-    a) Read the affected file
-    b) Apply the suggested fix or improvement
-    c) If the suggestion includes `codegenInstructions`, follow them exactly
-    d) If the suggestion is ambiguous, use best judgment aligned with CLAUDE.md style
-
-8.4 Re-Validate After Fixes:
-    MUST re-run validation after CodeRabbit fixes:
-
-    # Re-run tests (use Bash timeout=180000, no extra flags)
-    # Apply same TIMEOUT/SUMMARY CAVEAT from Phase 5.1
-    pytest
-
-    # Re-run linting
-    ruff check . && ruff format --check .
-
-    If failures:
-      - Identify which CodeRabbit fix broke things
-      - Adjust the fix to maintain correctness while addressing the review point
-      - Re-validate until green
-
-8.5 Optional Re-Review:
-    If significant changes were made (>10 lines modified from CodeRabbit fixes),
-    run a second review pass:
-
-    ```bash
-    coderabbit review --plain -t uncommitted
-    ```
-
-    Repeat 8.2-8.4 for any new findings.
-    Maximum 3 review cycles to prevent infinite loops.
-
-8.6 Log CodeRabbit Outcome:
-    Record in story completion notes:
-
-    ### CodeRabbit Review Results
-    - Findings: [N] total ([X] critical, [Y] suggestions, [Z] nits)
-    - All addressed: Yes/No
-    - Re-review cycles: [N]
-    - Remaining items: [list any intentionally deferred, with justification]
-```
-
-### Phase 9: Commit
-
-```yaml
-9.0 GATE CHECK - Verify Phases 7 & 8 Were Run:
-    BEFORE committing, verify BOTH phases completed:
+8.0 GATE CHECK - Verify Phase 7 Was Run:
+    BEFORE committing, verify simplification phase completed:
 
     Phase 7 (Simplification) evidence (at least one):
     - Simplification report was output (even if "0 issues found")
     - Sequential thinking tool was invoked for complexity scan
     - Explicit "Simplification skipped per --no-simplify flag" log
 
-    Phase 8 (CodeRabbit Review) evidence (at least one):
-    - CodeRabbit review was run and findings were processed
-    - CodeRabbit review results logged (even if "0 findings")
+    If missing: STOP and run Phase 7 before proceeding.
 
-    If either is missing: STOP and run the missing phase before proceeding.
-
-9.1 Stage Changes:
+8.1 Stage Changes:
     ```bash
     git add [specific files changed]
     ```
 
-9.2 Create Story-Scoped Commit:
+8.2 Create Story-Scoped Commit:
     ```bash
     git commit -m "$(cat <<'EOF'
     feat(epic-name): Implement story-001 - [brief description]
@@ -539,17 +433,17 @@ For EACH story in the queue, execute this complete cycle:
     )"
     ```
 
-9.3 Verify Commit:
+8.3 Verify Commit:
     ```bash
     git log -1 --oneline
     git status  # Should be clean
     ```
 ```
 
-### Phase 10: Story Completion
+### Phase 9: Story Completion
 
 ```yaml
-10.1 Update Story File:
+9.1 Update Story File:
     Edit the story .md file:
 
     - Change Status: `📋 Ready` → `✅ Complete`
@@ -577,17 +471,11 @@ For EACH story in the queue, execute this complete cycle:
     - Lines removed: [Y]
     - Status: [Completed | Skipped (--no-simplify) | No issues found]
 
-    ### CodeRabbit Review Results (REQUIRED)
-    - Findings: [N] total ([X] critical, [Y] suggestions, [Z] nits)
-    - All addressed: Yes/No
-    - Re-review cycles: [N]
-    - Remaining items: [list any intentionally deferred, with justification]
-
     ### Notes
     - [Any implementation decisions or deviations]
     ```
 
-10.2 Update Epic Overview:
+9.2 Update Epic Overview:
     If epic has a status table, update the story's row to Complete
 ```
 
@@ -605,7 +493,7 @@ After completing a story:
    - If unblocked: proceed automatically
    - If still blocked: skip and continue
 3. If no more stories:
-   - Proceed to Phase 11: Push & Create PR (automatic)
+   - Proceed to Phase 10: Push & Create PR (automatic)
    - Display completion summary with PR URL
 ```
 
@@ -616,7 +504,7 @@ After completing a story:
 When queue is empty, automatically push and create a PR:
 
 ```yaml
-Phase 11.1 - Display Implementation Summary:
+Phase 10.1 - Display Implementation Summary:
 
     ## Implementation Complete
 
@@ -631,7 +519,7 @@ Phase 11.1 - Display Implementation Summary:
     |-------|--------|
     | story-003-frontend | Blocked by external dependency |
 
-Phase 11.2 - Push Branch to Remote:
+Phase 10.2 - Push Branch to Remote:
 
     CURRENT_BRANCH=$(git branch --show-current)
     # Robust default branch detection (never hardcode main/master)
@@ -655,7 +543,7 @@ Phase 11.2 - Push Branch to Remote:
     # Handle push rejection (non-fast-forward)
     # If rejected: inform user to run /sync, then retry
 
-Phase 11.3 - Check for Existing PR:
+Phase 10.3 - Check for Existing PR:
 
     EXISTING_PR=$(gh pr list --head "$CURRENT_BRANCH" --json number,url --jq '.[0]')
     if [ -n "$EXISTING_PR" ]; then
@@ -664,7 +552,7 @@ Phase 11.3 - Check for Existing PR:
         SKIP PR creation — display existing PR URL and finish
     fi
 
-Phase 11.4 - Gather PR Context:
+Phase 10.4 - Gather PR Context:
 
     # Commits since divergence from default branch
     COMMITS=$(git log origin/$DEFAULT_BRANCH..HEAD --oneline)
@@ -674,7 +562,7 @@ Phase 11.4 - Gather PR Context:
     # Build story list from the implementation session
     # Use the stories_implemented[] array tracked during the queue
 
-Phase 11.5 - Create PR:
+Phase 10.5 - Create PR:
 
     Generate PR title:
       - If single story: "feat(epic-name): story title"
@@ -715,15 +603,14 @@ Phase 11.5 - Create PR:
     ## Quality Gates
 
     - [x] All tests pass
-    - [x] Linting passes (ruff check / ruff format)
+    - [x] Linting passes
     - [x] Code simplification review (Phase 7)
-    - [x] CodeRabbit AI review (Phase 8)
     - [x] Acceptance criteria verified per story
 
     ## Test Plan
 
-    - [x] Unit tests pass (`pytest`)
-    - [x] Linting clean (`ruff check . && ruff format --check .`)
+    - [x] Unit tests pass
+    - [x] Linting clean
     - [ ] Integration tests (if applicable)
     - [ ] Manual verification
 
@@ -733,7 +620,7 @@ Phase 11.5 - Create PR:
     )" --base "$DEFAULT_BRANCH" --head "$CURRENT_BRANCH"
     ```
 
-Phase 11.6 - Report Final Result:
+Phase 10.6 - Report Final Result:
 
     ## PR Created
 

@@ -124,9 +124,8 @@ Each `/implement` cycle per story:
 5. Test
 6. Lint
 7. Simplify
-8. Review
-9. Commit
-10. Mark story complete
+8. Commit
+9. Mark story complete
 
 ---
 
