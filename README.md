@@ -21,6 +21,8 @@ claude
 > /epic my-feature # start building
 ```
 
+**New to BMAD?** Read the [Team Guide](TEAM_GUIDE.md) for a short primer on how the two-layer architecture works, symlink vs copy mode, and corporate repo setup.
+
 ## What It Does
 
 BMAD adds slash commands to Claude Code that orchestrate multi-agent, story-driven development:
