@@ -57,6 +57,7 @@ BACKEND_FRAMEWORK=""
 FRONTEND_FRAMEWORK=""
 DATA_TOOLS=""
 DATABASE=""
+GITIGNORE_BMAD=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -69,6 +70,8 @@ while [[ $# -gt 0 ]]; do
     --frontend-framework) FRONTEND_FRAMEWORK="$2"; shift 2 ;;
     --data-tools)         DATA_TOOLS="$2"; shift 2 ;;
     --database)           DATABASE="$2"; shift 2 ;;
+    --gitignore)          GITIGNORE_BMAD="yes"; shift ;;
+    --no-gitignore)       GITIGNORE_BMAD="no"; shift ;;
     --non-interactive)    NON_INTERACTIVE=true; shift ;;
     -h|--help)
       echo "Usage: ${SCRIPT_NAME} [options]"
@@ -83,6 +86,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --frontend-framework NAME   Frontend framework (e.g., react, vue, svelte)"
       echo "  --data-tools TOOLS          Data tools (e.g., pandas, sqlalchemy, spark)"
       echo "  --database DB               Database: postgres|mysql|sqlite|mongodb|none"
+      echo "  --gitignore                 Add BMAD files to .gitignore (for existing/corporate repos)"
+      echo "  --no-gitignore              Commit BMAD files to repo (for new projects, default)"
       echo "  --non-interactive           Use defaults, no prompts"
       exit 0
       ;;
@@ -582,13 +587,40 @@ open('CLAUDE.md', 'w').write(content)
   success "CLAUDE.md created with detected settings. Review and customize as needed."
 fi
 
+# ─── Gitignore prompt ─────────────────────────────────────────────────────────
+if [[ -z "${GITIGNORE_BMAD}" ]] && [[ "${NON_INTERACTIVE}" == false ]]; then
+  echo ""
+  prompt "Add BMAD files to .gitignore? (recommended for existing/corporate repos) [y/N]"
+  read -r gi_confirm
+  [[ "${gi_confirm}" =~ ^[Yy]$ ]] && GITIGNORE_BMAD="yes" || GITIGNORE_BMAD="no"
+fi
+GITIGNORE_BMAD="${GITIGNORE_BMAD:-no}"
+
 # ─── Update .gitignore ────────────────────────────────────────────────────────
-if [[ -f ".gitignore" ]]; then
-  if ! grep -q "bmad/epics/\*/stories/\.draft/" .gitignore 2>/dev/null; then
-    echo "" >> .gitignore
-    echo "# BMAD draft stories" >> .gitignore
-    echo "bmad/epics/*/stories/.draft/" >> .gitignore
-    info "Updated .gitignore"
+if [[ "${GITIGNORE_BMAD}" == "yes" ]]; then
+  # Ensure .gitignore exists
+  touch .gitignore
+
+  if ! grep -q '^CLAUDE\.md$' .gitignore 2>/dev/null; then
+    {
+      echo ""
+      echo "# BMAD framework (local dev tooling)"
+      echo "CLAUDE.md"
+      echo "bmad/"
+    } >> .gitignore
+    success "Added CLAUDE.md and bmad/ to .gitignore"
+  fi
+else
+  # Even when committing BMAD files, ignore draft stories
+  if [[ -f ".gitignore" ]]; then
+    if ! grep -q "bmad/epics/\*/stories/\.draft/" .gitignore 2>/dev/null; then
+      {
+        echo ""
+        echo "# BMAD draft stories"
+        echo "bmad/epics/*/stories/.draft/"
+      } >> .gitignore
+      info "Updated .gitignore"
+    fi
   fi
 fi
 

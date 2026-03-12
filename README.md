@@ -97,6 +97,7 @@ init-bmad                   # interactive setup
 - **Frameworks** (conditional on specialists — e.g., FastAPI for backend, React for frontend)
 - **Database** (postgres, mysql, sqlite, mongodb, dynamodb, or none)
 - **Key directories** (auto-detected from existing code)
+- **Gitignore BMAD files** (recommended for existing/corporate repos)
 
 ### What It Creates
 
@@ -132,6 +133,33 @@ claude
 
 `/configure` analyzes your dependency files, directory structure, linter configs, and environment variable usage to fill remaining TODO markers in CLAUDE.md and specialist agent files. Run it again after adding new dependencies.
 
+## Using BMAD in Existing / Corporate Repos
+
+BMAD creates two things in your project: `CLAUDE.md` and a `bmad/` directory. For existing or corporate repos where you don't want to commit these, use `--gitignore`:
+
+```bash
+cd /path/to/corporate-repo
+init-bmad --gitignore       # adds CLAUDE.md and bmad/ to .gitignore
+```
+
+This adds the following to `.gitignore`:
+```
+# BMAD framework (local dev tooling)
+CLAUDE.md
+bmad/
+```
+
+Each developer runs `init-bmad` locally. BMAD files stay out of the shared repo.
+
+**When to gitignore vs. commit:**
+
+| Approach | Use when |
+|----------|----------|
+| `--gitignore` | Existing/corporate repos, teams with mixed tooling, strict repo policies |
+| Default (commit) | New projects, entire team uses BMAD, want shared epics/stories |
+
+If you gitignore BMAD files, each team member runs `init-bmad` in their local clone. Settings are personal. If you commit them, the team shares CLAUDE.md, specialist agents, and epic/story history.
+
 ## CLI Options
 
 ### install.sh
@@ -152,10 +180,11 @@ init-bmad [--name NAME] [--stack python|typescript|go|other]
           [--arch monolith|monorepo|microservices|serverless|library]
           [--backend-framework FRAMEWORK] [--frontend-framework FRAMEWORK]
           [--data-tools TOOLS] [--database DB]
+          [--gitignore | --no-gitignore]
           [--non-interactive]
 ```
 
-All flags are optional. In interactive mode, you'll be prompted for anything not provided via flags. In `--non-interactive` mode, sensible defaults are used.
+All flags are optional. In interactive mode, you'll be prompted for anything not provided via flags. In `--non-interactive` mode, sensible defaults are used (BMAD files are committed by default).
 
 ## How BMAD Works
 
