@@ -32,7 +32,7 @@ BMAD adds slash commands to Claude Code that orchestrate multi-agent, story-driv
 | `/bmad <topic>` | Full 5-phase orchestration with parallel agents |
 | `/epic <name>` | Create new epic with context gathering |
 | `/story <path>` | Create or implement a story |
-| `/implement <path>` | Execute stories to completion (9-phase cycle) |
+| `/implement <path>` | Execute stories to completion (10-phase cycle) |
 | `/configure` | Auto-detect project settings from codebase |
 | `/explore <topic>` | Deep codebase exploration |
 | `/think <question>` | Sequential reasoning without BMAD structure |
@@ -203,8 +203,9 @@ All flags are optional. In interactive mode, you'll be prompted for anything not
   5. Testing
   6. Lint & validation
   7. Code simplification
-  8. Commit
-  9. Story completion
+  8. Self-review
+  9. Commit
+  10. Story completion
   ↓
 Repeat until epic is complete
 ```

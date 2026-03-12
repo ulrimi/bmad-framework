@@ -157,9 +157,10 @@ For EACH story in the queue, execute this complete cycle:
 | 5 | Testing | ✅ | Run existing tests, write new tests |
 | 6 | Validation & Linting | ✅ | Lint, type check, verify acceptance criteria |
 | **7** | **Code Simplification** | **✅ MANDATORY** | **Review for over-engineering, apply Boy Scout Rule** |
-| 8 | Commit | ✅ | Stage, commit with gate check for Phase 7 |
-| 9 | Story Completion | ✅ | Update story file with completion notes |
-| **10** | **Push & Create PR** | **✅ AUTO** | **Push branch, create GitHub PR (runs after ALL stories complete)** |
+| **8** | **Self-Review** | **✅ MANDATORY** | **Run /review on own changes, fix all findings** |
+| 9 | Commit | ✅ | Stage, commit with gate check for Phases 7 & 8 |
+| 10 | Story Completion | ✅ | Update story file with completion notes |
+| **11** | **Push & Create PR** | **✅ AUTO** | **Push branch, create GitHub PR (runs after ALL stories complete)** |
 
 ---
 
@@ -397,25 +398,83 @@ For EACH story in the queue, execute this complete cycle:
 
 **IMPORTANT**: Never skip this phase silently. If skipping due to `--no-simplify`, explicitly log: "Simplification skipped per --no-simplify flag."
 
-### Phase 8: Commit
+### Phase 8: Self-Review (MANDATORY)
+
+**Purpose**: Run the `/review` command on your own uncommitted changes. Fix all findings before committing.
+
+> **CRITICAL**: This phase runs on EVERY implementation. It is NOT optional.
+> ALL findings — critical, suggestions, AND nits — MUST be addressed before proceeding to commit.
 
 ```yaml
-8.0 GATE CHECK - Verify Phase 7 Was Run:
-    BEFORE committing, verify simplification phase completed:
+8.1 Run /review on Uncommitted Changes:
+    Execute the /review command against the current uncommitted diff.
+    This performs a structured code review covering:
+    - Correctness and logic errors
+    - Security issues (injection, secrets, input validation)
+    - Performance concerns
+    - Style and consistency with CLAUDE.md conventions
+    - Test coverage gaps
+
+8.2 Process Findings:
+    For each finding from the review:
+
+    | Priority | Action |
+    |----------|--------|
+    | Critical (bugs, security) | Fix immediately |
+    | Suggestions (improvements) | Implement all |
+    | Nits (style, naming) | Implement all |
+
+    The goal is to catch issues BEFORE they reach commit,
+    the same way a human reviewer would.
+
+8.3 Apply Fixes:
+    For each finding:
+    a) Read the affected file
+    b) Apply the fix
+    c) If the fix is ambiguous, use best judgment aligned with CLAUDE.md style
+
+8.4 Re-Validate After Fixes:
+    MUST re-run tests and linting after any review fixes:
+
+    # Re-run tests (use Bash timeout=180000)
+    # Re-run linting (use lint commands from CLAUDE.md)
+
+    If failures:
+      - Identify which fix broke things
+      - Adjust the fix to maintain correctness
+      - Re-validate until green
+
+8.5 Log Review Outcome:
+    Record in story completion notes:
+
+    ### Self-Review Results
+    - Findings: [N] total ([X] critical, [Y] suggestions, [Z] nits)
+    - All addressed: Yes/No
+```
+
+### Phase 9: Commit
+
+```yaml
+9.0 GATE CHECK - Verify Phases 7 & 8 Were Run:
+    BEFORE committing, verify BOTH phases completed:
 
     Phase 7 (Simplification) evidence (at least one):
     - Simplification report was output (even if "0 issues found")
     - Sequential thinking tool was invoked for complexity scan
     - Explicit "Simplification skipped per --no-simplify flag" log
 
-    If missing: STOP and run Phase 7 before proceeding.
+    Phase 8 (Self-Review) evidence (at least one):
+    - /review was run and findings were processed
+    - Self-review results logged (even if "0 findings")
 
-8.1 Stage Changes:
+    If either is missing: STOP and run the missing phase before proceeding.
+
+9.1 Stage Changes:
     ```bash
     git add [specific files changed]
     ```
 
-8.2 Create Story-Scoped Commit:
+9.2 Create Story-Scoped Commit:
     ```bash
     git commit -m "$(cat <<'EOF'
     feat(epic-name): Implement story-001 - [brief description]
@@ -433,17 +492,17 @@ For EACH story in the queue, execute this complete cycle:
     )"
     ```
 
-8.3 Verify Commit:
+9.3 Verify Commit:
     ```bash
     git log -1 --oneline
     git status  # Should be clean
     ```
 ```
 
-### Phase 9: Story Completion
+### Phase 10: Story Completion
 
 ```yaml
-9.1 Update Story File:
+10.1 Update Story File:
     Edit the story .md file:
 
     - Change Status: `📋 Ready` → `✅ Complete`
@@ -471,11 +530,15 @@ For EACH story in the queue, execute this complete cycle:
     - Lines removed: [Y]
     - Status: [Completed | Skipped (--no-simplify) | No issues found]
 
+    ### Self-Review Results (REQUIRED)
+    - Findings: [N] total ([X] critical, [Y] suggestions, [Z] nits)
+    - All addressed: Yes/No
+
     ### Notes
     - [Any implementation decisions or deviations]
     ```
 
-9.2 Update Epic Overview:
+10.2 Update Epic Overview:
     If epic has a status table, update the story's row to Complete
 ```
 
@@ -493,7 +556,7 @@ After completing a story:
    - If unblocked: proceed automatically
    - If still blocked: skip and continue
 3. If no more stories:
-   - Proceed to Phase 10: Push & Create PR (automatic)
+   - Proceed to Phase 11: Push & Create PR (automatic)
    - Display completion summary with PR URL
 ```
 
@@ -504,7 +567,7 @@ After completing a story:
 When queue is empty, automatically push and create a PR:
 
 ```yaml
-Phase 10.1 - Display Implementation Summary:
+Phase 11.1 - Display Implementation Summary:
 
     ## Implementation Complete
 
@@ -519,7 +582,7 @@ Phase 10.1 - Display Implementation Summary:
     |-------|--------|
     | story-003-frontend | Blocked by external dependency |
 
-Phase 10.2 - Push Branch to Remote:
+Phase 11.2 - Push Branch to Remote:
 
     CURRENT_BRANCH=$(git branch --show-current)
     # Robust default branch detection (never hardcode main/master)
@@ -543,7 +606,7 @@ Phase 10.2 - Push Branch to Remote:
     # Handle push rejection (non-fast-forward)
     # If rejected: inform user to run /sync, then retry
 
-Phase 10.3 - Check for Existing PR:
+Phase 11.3 - Check for Existing PR:
 
     EXISTING_PR=$(gh pr list --head "$CURRENT_BRANCH" --json number,url --jq '.[0]')
     if [ -n "$EXISTING_PR" ]; then
@@ -552,7 +615,7 @@ Phase 10.3 - Check for Existing PR:
         SKIP PR creation — display existing PR URL and finish
     fi
 
-Phase 10.4 - Gather PR Context:
+Phase 11.4 - Gather PR Context:
 
     # Commits since divergence from default branch
     COMMITS=$(git log origin/$DEFAULT_BRANCH..HEAD --oneline)
@@ -562,7 +625,7 @@ Phase 10.4 - Gather PR Context:
     # Build story list from the implementation session
     # Use the stories_implemented[] array tracked during the queue
 
-Phase 10.5 - Create PR:
+Phase 11.5 - Create PR:
 
     Generate PR title:
       - If single story: "feat(epic-name): story title"
@@ -605,6 +668,7 @@ Phase 10.5 - Create PR:
     - [x] All tests pass
     - [x] Linting passes
     - [x] Code simplification review (Phase 7)
+    - [x] Self-review (Phase 8)
     - [x] Acceptance criteria verified per story
 
     ## Test Plan
@@ -620,7 +684,7 @@ Phase 10.5 - Create PR:
     )" --base "$DEFAULT_BRANCH" --head "$CURRENT_BRANCH"
     ```
 
-Phase 10.6 - Report Final Result:
+Phase 11.6 - Report Final Result:
 
     ## PR Created
 
