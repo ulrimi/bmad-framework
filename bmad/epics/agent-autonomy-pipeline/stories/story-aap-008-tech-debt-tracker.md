@@ -5,7 +5,7 @@ Story ID: aap-008
 Epic: agent-autonomy-pipeline
 Priority: Low
 Estimated Effort: S
-Status: Draft
+Status: ✅ Complete
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -90,8 +90,35 @@ _Not yet scanned. Run `/maintain` to populate._
 - Verify format is parseable by /maintain for updates
 
 ## Definition of Done
-- [ ] tech-debt-tracker.md template created
-- [ ] Items table is structured and sortable
-- [ ] Categories are defined
-- [ ] Resolved items section for history
-- [ ] Story status updated
+- [x] tech-debt-tracker.md template created
+- [x] Items table is structured and sortable
+- [x] Categories are defined
+- [x] Resolved items section for history
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: 971a3bd
+
+### Files Changed
+- `.claude/bmad-template/docs/exec-plans/tech-debt-tracker.md` — Expanded template with full 8-column Active Items table, Categories section, Resolved Items table, and Last Scanned marker
+- `.claude/commands/maintain.md` — Updated Step 5 format to match new table structure with categories and effort columns
+
+### Simplification Results
+- Files reviewed: 2
+- Issues found: 0
+- Issues fixed: 0
+- Lines removed: 0
+- Status: No issues found
+
+### CodeRabbit Review Results
+- Findings: 0 total (0 critical, 0 suggestions, 0 nits)
+- All addressed: N/A
+- Re-review cycles: 0
+- Remaining items: None
+
+### Notes
+- Template already existed from HEF-005 but had a simpler 6-column format; expanded to match story AC2 requirements
+- init-bmad --full already handles copying this template (no changes needed)
+- /maintain already had Step 5 for tracker updates; updated format string to match new columns
