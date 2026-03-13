@@ -31,7 +31,7 @@ ls "$REPO_ROOT/bmad/epics/" 2>/dev/null || echo "ERROR: No bmad/epics/ directory
 - Epic paths: `$REPO_ROOT/bmad/epics/[epic-name]/`
 - Story paths: `$REPO_ROOT/bmad/epics/[epic-name]/stories/`
 - Source paths: `$REPO_ROOT/src/`, `$REPO_ROOT/tests/`, etc.
-- Specialists: `$REPO_ROOT/bmad/qf-bmad/agents/active/`
+- Specialists: `$REPO_ROOT/bmad/config/agents/active/`
 
 **If in main repo (not worktree) and implementing a full epic**, warn:
 ```
@@ -161,9 +161,9 @@ For EACH story in the queue, execute this complete cycle:
 | 6.75 | Runtime Validation | Configurable | Launch app and run acceptance checks from story's runtime_validation section |
 | **7** | **Code Simplification** | **✅ MANDATORY** | **Review for over-engineering, apply Boy Scout Rule** |
 | **8** | **Self-Review + Multi-Agent Review** | **✅ MANDATORY** | **Self-review + specialist domain reviews with escalation** |
-| 9 | Commit | ✅ | Stage, commit with gate check for Phases 7 & 8 |
-| 10 | Story Completion | ✅ | Update story file with completion notes |
-| 10.5 | Knowledge Update | Lightweight | Update docs with architectural decisions before commit |
+| 9 | Story Completion | ✅ | Update story file with completion notes |
+| 9.5 | Knowledge Update | Lightweight | Update docs with architectural decisions |
+| 10 | Commit | ✅ | Stage all changes (code + story + docs), commit with gate check |
 | **11** | **Push & Create PR** | **✅ AUTO** | **Push branch, create GitHub PR (runs after ALL stories complete)** |
 
 ---
@@ -221,7 +221,7 @@ For EACH story in the queue, execute this complete cycle:
     - If blocked: skip and move to next story, or ask user
 
 1.3 Load Specialist Persona:
-    - Match story domain to specialist file in bmad/qf-bmad/agents/active/
+    - Match story domain to specialist file in bmad/config/agents/active/
     - Read specialist .md and adopt expertise
     - Match based on story keywords and specialist domain descriptions
 ```
@@ -580,7 +580,7 @@ For EACH story in the queue, execute this complete cycle:
 **Purpose**: Run `/review` on your own changes, then route reviews to domain-specialist agents for deeper analysis. Fix meaningful issues before committing.
 
 > **CRITICAL**: This phase runs on EVERY implementation. It is NOT optional.
-> Multi-agent review runs when specialist agents are available in `bmad/qf-bmad/agents/active/`.
+> Multi-agent review runs when specialist agents are available in `bmad/config/agents/active/`.
 
 ```yaml
 8.1 Run /review on Uncommitted Changes:
@@ -621,7 +621,7 @@ For EACH story in the queue, execute this complete cycle:
        - Database, data layer, caching → data-specialist review
        - Infrastructure, CI/CD, deploy → infra-specialist review
        - Tests, fixtures, QA → qa-specialist review
-    c) Load matching specialist agent files from bmad/qf-bmad/agents/active/
+    c) Load matching specialist agent files from bmad/config/agents/active/
 
     If no specialist agents exist in the project:
       Log: "No specialist agents configured — skipping multi-agent review"
@@ -686,58 +686,10 @@ For EACH story in the queue, execute this complete cycle:
     - Review cycles: [N]
 ```
 
-### Phase 9: Commit
+### Phase 9: Story Completion
 
 ```yaml
-9.0 GATE CHECK - Verify Phases 7 & 8 Were Run:
-    BEFORE committing, verify BOTH phases completed:
-
-    Phase 7 (Simplification) evidence (at least one):
-    - Simplification report was output (even if "0 issues found")
-    - Sequential thinking tool was invoked for complexity scan
-    - Explicit "Simplification skipped per --no-simplify flag" log
-
-    Phase 8 (Self-Review + Multi-Agent Review) evidence (at least one):
-    - /review was run and findings were processed
-    - Self-review results logged (even if "0 findings")
-    - Multi-agent review results logged (or "No specialist agents configured" skip logged)
-
-    If either is missing: STOP and run the missing phase before proceeding.
-
-9.1 Stage Changes:
-    ```bash
-    git add [specific files changed]
-    ```
-
-9.2 Create Story-Scoped Commit:
-    ```bash
-    git commit -m "$(cat <<'EOF'
-    feat(epic-name): Implement story-001 - [brief description]
-
-    - [Key change 1]
-    - [Key change 2]
-    - [Key change 3]
-
-    Story: bmad/epics/[epic]/stories/story-001-*.md
-
-    🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-    Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>
-    EOF
-    )"
-    ```
-
-9.3 Verify Commit:
-    ```bash
-    git log -1 --oneline
-    git status  # Should be clean
-    ```
-```
-
-### Phase 10: Story Completion
-
-```yaml
-10.1 Update Story File:
+9.1 Update Story File:
     Edit the story .md file:
 
     - Change Status: `📋 Ready` → `✅ Complete`
@@ -749,7 +701,6 @@ For EACH story in the queue, execute this complete cycle:
     ## Completion Notes
 
     **Implemented**: [DATE]
-    **Commit**: [COMMIT HASH]
 
     ### Files Changed
     - `path/to/file1.py` - [what changed]
@@ -780,49 +731,89 @@ For EACH story in the queue, execute this complete cycle:
     - [Any implementation decisions or deviations]
     ```
 
-10.2 Update Epic Overview:
+9.2 Update Epic Overview:
     If epic has a status table, update the story's row to Complete
 ```
 
-### Phase 10.5: Knowledge Update (Lightweight, Optional)
+### Phase 9.5: Knowledge Update (Lightweight, Optional)
 
-**Purpose**: Capture architectural decisions and new patterns discovered during implementation so future agent sessions benefit. Changes are staged and included in the story commit.
+**Purpose**: Capture architectural decisions and new patterns discovered during implementation so future agent sessions benefit. All updates are included in the story commit (Phase 10).
 
 > This phase is lightweight — quick prompts and optional writes. Skip if no architectural decisions were made.
-> All updates are staged with `git add` so they're included in the story commit.
 
 ```yaml
-10.5.1 Check for Architectural Decisions:
+9.5.1 Check for Architectural Decisions:
     Reflect: Did this implementation involve any of the following?
     - New architectural patterns or conventions
     - Decisions about module structure, boundaries, or data flow
     - Deviations from the planned architecture
     - Discovery of undocumented conventions
 
-    If none: Log "No architectural decisions to record — skipping Phase 10.5"
-             Proceed to Queue Continuation.
+    If none: Log "No architectural decisions to record — skipping Phase 9.5"
+             Proceed to Phase 10.
 
-10.5.2 Update Decision Log (if applicable):
+9.5.2 Update Decision Log (if applicable):
     If the epic has a Decision Log section in epic-overview.md:
       Prompt: "Log these decisions in the epic Decision Log? [Y/n]"
       If yes: Append decision entries with date, context, and rationale
 
-10.5.3 Update Architecture Docs (if applicable):
+9.5.3 Update Architecture Docs (if applicable):
     If new patterns were established that future stories should follow:
       Prompt: "Update ARCHITECTURE.md or golden-principles.md? [Y/n]"
       If yes: Make targeted updates to the relevant doc
 
-10.5.4 Note Quality Impact (if applicable):
+9.5.4 Note Quality Impact (if applicable):
     If QUALITY_SCORE.md exists:
       Note whether quality likely improved or degraded in the affected domain
       (Do NOT re-run /score — just leave a brief note for the next /score run)
+```
 
-10.5.5 Stage Updates:
+### Phase 10: Commit
+
+```yaml
+10.0 GATE CHECK - Verify Phases 7 & 8 Were Run:
+    BEFORE committing, verify BOTH phases completed:
+
+    Phase 7 (Simplification) evidence (at least one):
+    - Simplification report was output (even if "0 issues found")
+    - Sequential thinking tool was invoked for complexity scan
+    - Explicit "Simplification skipped per --no-simplify flag" log
+
+    Phase 8 (Self-Review + Multi-Agent Review) evidence (at least one):
+    - /review was run and findings were processed
+    - Self-review results logged (even if "0 findings")
+    - Multi-agent review results logged (or "No specialist agents configured" skip logged)
+
+    If either is missing: STOP and run the missing phase before proceeding.
+
+10.1 Stage All Changes:
     ```bash
-    git add [any docs updated in this phase]
+    git add [implementation files, story file, any docs updated in Phase 9.5]
     ```
-    These changes will be included in the story commit (Phase 9)
-    or committed alongside story completion updates.
+
+10.2 Create Story-Scoped Commit:
+    ```bash
+    git commit -m "$(cat <<'EOF'
+    feat(epic-name): Implement story-001 - [brief description]
+
+    - [Key change 1]
+    - [Key change 2]
+    - [Key change 3]
+
+    Story: bmad/epics/[epic]/stories/story-001-*.md
+
+    🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+    Co-Authored-By: Claude <noreply@anthropic.com>
+    EOF
+    )"
+    ```
+
+10.3 Verify Commit:
+    ```bash
+    git log -1 --oneline
+    git status  # Should be clean
+    ```
 ```
 
 ---

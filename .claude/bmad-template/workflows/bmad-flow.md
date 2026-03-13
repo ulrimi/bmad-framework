@@ -15,7 +15,7 @@ This adapts the BMAD orchestration framework for **{{PROJECT_NAME}}**. The BMAD 
 Run /configure to auto-populate from your specialist stubs. -->
 | **QA & Testing** | Testing, validation, edge cases, correctness |
 
-> Edit `bmad/qf-bmad/agents/active/` to match your project's specialist roles.
+> Edit `bmad/config/agents/active/` to match your project's specialist roles.
 
 ### Master Orchestration Responsibilities
 

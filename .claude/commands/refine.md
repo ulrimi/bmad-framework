@@ -96,7 +96,7 @@ For each identified gap:
 
 ### Step 6: Execute BMAD Refine Task
 
-Read and follow: `$REPO_ROOT/bmad/qf-bmad/tasks/refine-epic.md`
+Read and follow: `$REPO_ROOT/bmad/config/tasks/refine-epic.md`
 
 ### Step 7: Output Refinement Report
 

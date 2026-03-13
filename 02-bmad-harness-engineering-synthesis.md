@@ -17,13 +17,13 @@ This document maps each harness engineering concept to its BMAD equivalent, iden
 | Harness Engineering Concept | BMAD Equivalent | Status |
 |---|---|---|
 | Story-driven decomposition | `/epic` → `/story` → `/implement` lifecycle | Strong |
-| Specialist agent personas | `bmad/qf-bmad/agents/active/` specialist stubs | Strong |
+| Specialist agent personas | `bmad/config/agents/active/` specialist stubs | Strong |
 | Quality gates before merge | Pre-work and post-work checklists, Phase 7 (simplification) and Phase 8 (CodeRabbit review) | Strong |
 | Worktree-based parallelism | `claude-feature` with HITL, Yolo, and Ralph modes | Strong |
 | Agent instructions file | CLAUDE.md (global + project-level) | Present, expandable |
 | Architecture documentation | ARCHITECTURE.md (optional, recommended after bootstrap) | Present, under-specified |
 | Acceptance criteria as behavior | Given-When-Then format in story templates | Strong |
-| 10-phase implementation cycle | `/implement` command with Phases 1-11 | Strong |
+| Multi-phase implementation cycle | `/implement` command with Phases 0.5-11 | Strong |
 | Autonomous merge loop | Ralph mode (`claude-feature --ralph`) | Present |
 
 BMAD's core loop — epic → story → implement — is fundamentally sound and maps directly to the harness engineering philosophy of "humans steer, agents execute." The story file functions as a self-contained context vehicle, which is the same principle behind ExecPlans.
@@ -52,7 +52,7 @@ your-project/
 ├── CLAUDE.md                       ← Table of contents (~100 lines)
 ├── ARCHITECTURE.md                 ← High-level system map (promoted from optional to recommended)
 ├── bmad/
-│   ├── qf-bmad/                    ← Existing BMAD config
+│   ├── config/                    ← Existing BMAD config
 │   └── epics/                      ← Existing epic/story storage
 └── docs/                           ← NEW: Repository knowledge base
     ├── design-docs/
@@ -337,7 +337,7 @@ your-project/
 ├── CLAUDE.md                          ← Restructured as table of contents
 ├── ARCHITECTURE.md                    ← NEW: Template from matklad's pattern
 ├── bmad/
-│   ├── qf-bmad/
+│   ├── config/
 │   │   ├── core-config.yaml
 │   │   ├── agents/
 │   │   ├── workflows/

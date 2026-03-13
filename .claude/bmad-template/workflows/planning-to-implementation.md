@@ -28,7 +28,7 @@ Build a prioritized queue of stories:
 
 ### Step 3: Specialist Routing
 
-Match each story to the appropriate specialist agent in `bmad/qf-bmad/agents/active/`.
+Match each story to the appropriate specialist agent in `bmad/config/agents/active/`.
 
 Each specialist file defines:
 - Domain expertise
@@ -39,7 +39,7 @@ Each specialist file defines:
 
 For each story, the implementing agent:
 1. Reads the story file completely
-2. Loads the specialist persona from `bmad/qf-bmad/agents/active/`
+2. Loads the specialist persona from `bmad/config/agents/active/`
 3. Reviews referenced source files
 4. Checks `ARCHITECTURE.md` for architectural guidance
 5. Runs pre-work checklist

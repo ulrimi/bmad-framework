@@ -59,11 +59,11 @@ prompt: |
 
 ### Step 2: Execute Create Epic Task
 
-With agent outputs, execute: `$REPO_ROOT/bmad/qf-bmad/tasks/create-epic.md`
+With agent outputs, execute: `$REPO_ROOT/bmad/config/tasks/create-epic.md`
 
 ### Step 3: Immediate Refinement
 
-Execute: `$REPO_ROOT/bmad/qf-bmad/tasks/refine-epic.md`
+Execute: `$REPO_ROOT/bmad/config/tasks/refine-epic.md`
 
 Apply refinements to stories.
 

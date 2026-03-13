@@ -39,7 +39,7 @@ cat "$REPO_ROOT/bmad/epics/[epic]/stories/[story].md"
 
 ### Step 2: Identify Specialist
 
-Read story content and match to specialist from `$REPO_ROOT/bmad/qf-bmad/agents/bmad-master.md`:
+Read story content and match to specialist from `$REPO_ROOT/bmad/config/agents/bmad-master.md`:
 
 | Story Domain | Specialist File |
 |--------------|-----------------|
@@ -105,7 +105,7 @@ prompt: |
 
 ### Step 3: Execute Create Story Task
 
-Read and follow: `$REPO_ROOT/bmad/qf-bmad/tasks/create-story.md`
+Read and follow: `$REPO_ROOT/bmad/config/tasks/create-story.md`
 
 Ensure story includes:
 - Clear user story (As a/I want/So that)

@@ -125,8 +125,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 # ─── Existing-project guard (skipped in upgrade mode) ────────────────────────
-if [[ -d "bmad/qf-bmad" ]] && [[ "${UPGRADE_MODE}" == false ]]; then
-  warn "bmad/qf-bmad already exists. Re-running will overwrite workflow/task/template files but preserve epics and agent customizations."
+if [[ -d "bmad/config" ]] && [[ "${UPGRADE_MODE}" == false ]]; then
+  warn "bmad/config already exists. Re-running will overwrite workflow/task/template files but preserve epics and agent customizations."
   read -r -p "Continue? [y/N] " confirm
   [[ "${confirm}" =~ ^[Yy]$ ]] || { info "Aborted."; exit 0; }
 fi
@@ -134,14 +134,14 @@ fi
 # ─── Upgrade mode ────────────────────────────────────────────────────────────
 if [[ "${UPGRADE_MODE}" == true ]]; then
   # Pre-flight: require existing BMAD setup
-  if [[ ! -f "bmad/qf-bmad/core-config.yaml" ]]; then
+  if [[ ! -f "bmad/config/core-config.yaml" ]]; then
     error "No existing BMAD setup detected. Use 'init-bmad' (without --upgrade) to bootstrap a new project."
   fi
 
   # Extract project info from existing config
-  PROJECT_NAME=$(grep -E '^\s+name:' bmad/qf-bmad/core-config.yaml | head -1 | sed 's/.*name: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
+  PROJECT_NAME=$(grep -E '^\s+name:' bmad/config/core-config.yaml | head -1 | sed 's/.*name: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
   PROJECT_NAME="${PROJECT_NAME:-$(basename "${REPO_ROOT}")}"
-  DESCRIPTION=$(grep -E '^\s+description:' bmad/qf-bmad/core-config.yaml | head -1 | sed 's/.*description: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
+  DESCRIPTION=$(grep -E '^\s+description:' bmad/config/core-config.yaml | head -1 | sed 's/.*description: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
   DESCRIPTION="${DESCRIPTION:-${PROJECT_NAME}}"
 
   info "Scanning existing BMAD setup for ${PROJECT_NAME}..."
@@ -156,15 +156,15 @@ if [[ "${UPGRADE_MODE}" == true ]]; then
     _lines=$(wc -l < CLAUDE.md | tr -d ' ')
     EXISTING+=("CLAUDE.md (${_lines} lines)")
   fi
-  [[ -f "bmad/qf-bmad/core-config.yaml" ]] && EXISTING+=("core-config.yaml")
+  [[ -f "bmad/config/core-config.yaml" ]] && EXISTING+=("core-config.yaml")
 
-  _agent_count=$(find bmad/qf-bmad/agents/active -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+  _agent_count=$(find bmad/config/agents/active -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
   [[ "${_agent_count}" -gt 0 ]] && EXISTING+=("${_agent_count} specialist agents")
 
-  [[ -d "bmad/qf-bmad/workflows" ]] && EXISTING+=("Workflows")
-  [[ -d "bmad/qf-bmad/tasks" ]] && EXISTING+=("Tasks")
-  [[ -d "bmad/qf-bmad/templates" ]] && EXISTING+=("Templates")
-  [[ -d "bmad/qf-bmad/checklists" ]] && EXISTING+=("Checklists")
+  [[ -d "bmad/config/workflows" ]] && EXISTING+=("Workflows")
+  [[ -d "bmad/config/tasks" ]] && EXISTING+=("Tasks")
+  [[ -d "bmad/config/templates" ]] && EXISTING+=("Templates")
+  [[ -d "bmad/config/checklists" ]] && EXISTING+=("Checklists")
 
   # ─── Check each harness engineering artifact ───────────────────────────
 
@@ -175,7 +175,7 @@ if [[ "${UPGRADE_MODE}" == true ]]; then
   fi
 
   # 2. golden-principles.md
-  if [[ ! -f "bmad/qf-bmad/golden-principles.md" ]]; then
+  if [[ ! -f "bmad/config/golden-principles.md" ]]; then
     MISSING+=("golden-principles.md — Code taste rules for this project")
     MISSING_IDS+=("golden-principles")
   fi
@@ -213,7 +213,7 @@ if [[ "${UPGRADE_MODE}" == true ]]; then
   fi
 
   # 7. structural_validation in core-config.yaml
-  if ! grep -q "structural_validation:" bmad/qf-bmad/core-config.yaml; then
+  if ! grep -q "structural_validation:" bmad/config/core-config.yaml; then
     MISSING+=("structural_validation in core-config.yaml — Mechanical enforcement hooks")
     MISSING_IDS+=("structural-validation")
   fi
@@ -233,12 +233,12 @@ if [[ "${UPGRADE_MODE}" == true ]]; then
   fi
 
   # 10. Living-document sections in epic template
-  if [[ -f "bmad/qf-bmad/templates/epic-template.md" ]]; then
+  if [[ -f "bmad/config/templates/epic-template.md" ]]; then
     _missing_sections=0
-    grep -q "## Progress" bmad/qf-bmad/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
-    grep -q "## Surprises" bmad/qf-bmad/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
-    grep -q "## Decision Log" bmad/qf-bmad/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
-    grep -q "## Outcomes" bmad/qf-bmad/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
+    grep -q "## Progress" bmad/config/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
+    grep -q "## Surprises" bmad/config/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
+    grep -q "## Decision Log" bmad/config/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
+    grep -q "## Outcomes" bmad/config/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
     if [[ ${_missing_sections} -gt 0 ]]; then
       MISSING+=("Living-document sections in epic template — Progress, Surprises, Decision Log, Retrospective")
       MISSING_IDS+=("living-docs")
@@ -277,15 +277,15 @@ if [[ "${UPGRADE_MODE}" == true ]]; then
     for i in "${!MISSING_IDS[@]}"; do
       case "${MISSING_IDS[$i]}" in
         architecture)           echo "  CREATE  ARCHITECTURE.md" ;;
-        golden-principles)      echo "  CREATE  bmad/qf-bmad/golden-principles.md" ;;
+        golden-principles)      echo "  CREATE  bmad/config/golden-principles.md" ;;
         knowledge-map)          echo "  MODIFY  CLAUDE.md (insert ## Knowledge Map section)" ;;
         docs-scaffold)          echo "  CREATE  docs/ directory structure" ;;
         core-beliefs)           echo "  CREATE  docs/design-docs/core-beliefs.md" ;;
         quality-score)          echo "  CREATE  docs/QUALITY_SCORE.md" ;;
-        structural-validation)  echo "  MODIFY  bmad/qf-bmad/core-config.yaml (append structural_validation)" ;;
+        structural-validation)  echo "  MODIFY  bmad/config/core-config.yaml (append structural_validation)" ;;
         tech-debt-tracker)      echo "  CREATE  docs/exec-plans/tech-debt-tracker.md" ;;
         lints-scaffold)         echo "  CREATE  lints/ directory with starter validation scripts" ;;
-        living-docs)            echo "  MODIFY  bmad/qf-bmad/templates/epic-template.md (append sections)" ;;
+        living-docs)            echo "  MODIFY  bmad/config/templates/epic-template.md (append sections)" ;;
       esac
     done
     echo ""
@@ -424,11 +424,11 @@ if [[ "${UPGRADE_MODE}" == true ]]; then
   if _selected "golden-principles"; then
     if [[ -f "${TEMPLATE_DIR}/templates/golden-principles.md" ]]; then
       info "Creating golden-principles.md..."
-      cp "${TEMPLATE_DIR}/templates/golden-principles.md" bmad/qf-bmad/golden-principles.md
+      cp "${TEMPLATE_DIR}/templates/golden-principles.md" bmad/config/golden-principles.md
       sed -i.bak -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
-        bmad/qf-bmad/golden-principles.md && rm bmad/qf-bmad/golden-principles.md.bak
-      CREATED_FILES+=("bmad/qf-bmad/golden-principles.md")
-      CREATED_DESCS+=("bmad/qf-bmad/golden-principles.md")
+        bmad/config/golden-principles.md && rm bmad/config/golden-principles.md.bak
+      CREATED_FILES+=("bmad/config/golden-principles.md")
+      CREATED_DESCS+=("bmad/config/golden-principles.md")
       success "golden-principles.md created."
     else
       warn "golden-principles.md template not found — skipping."
@@ -449,14 +449,14 @@ if [[ "${UPGRADE_MODE}" == true ]]; then
       _km_lines+=("|-----|------|---------|")
       [[ -f "ARCHITECTURE.md" ]] && \
         _km_lines+=("| Architecture | \`ARCHITECTURE.md\` | Codemap, invariants, boundaries |")
-      [[ -f "bmad/qf-bmad/golden-principles.md" ]] && \
-        _km_lines+=("| Golden Principles | \`bmad/qf-bmad/golden-principles.md\` | Style rules and taste invariants |")
-      [[ -f "bmad/qf-bmad/core-config.yaml" ]] && \
-        _km_lines+=("| Core Config | \`bmad/qf-bmad/core-config.yaml\` | Project settings and specialist list |")
-      [[ -d "bmad/qf-bmad/workflows" ]] && \
-        _km_lines+=("| BMAD Workflow | \`bmad/qf-bmad/workflows/bmad-flow.md\` | Orchestration phases |")
-      [[ -d "bmad/qf-bmad/agents/active" ]] && \
-        _km_lines+=("| Specialist Agents | \`bmad/qf-bmad/agents/active/\` | Domain-specific agent personas |")
+      [[ -f "bmad/config/golden-principles.md" ]] && \
+        _km_lines+=("| Golden Principles | \`bmad/config/golden-principles.md\` | Style rules and taste invariants |")
+      [[ -f "bmad/config/core-config.yaml" ]] && \
+        _km_lines+=("| Core Config | \`bmad/config/core-config.yaml\` | Project settings and specialist list |")
+      [[ -d "bmad/config/workflows" ]] && \
+        _km_lines+=("| BMAD Workflow | \`bmad/config/workflows/bmad-flow.md\` | Orchestration phases |")
+      [[ -d "bmad/config/agents/active" ]] && \
+        _km_lines+=("| Specialist Agents | \`bmad/config/agents/active/\` | Domain-specific agent personas |")
       [[ -d "bmad/epics" ]] && \
         _km_lines+=("| Epics & Stories | \`bmad/epics/\` | All epics and their stories |")
       [[ -d "docs/design-docs" ]] && \
@@ -534,20 +534,23 @@ open('CLAUDE.md', 'w').write('\n'.join(lines))
   # ── Apply: structural_validation in core-config.yaml (AC6) ──────────
   if _selected "structural-validation"; then
     info "Appending structural_validation to core-config.yaml..."
-    _config_backup=$(_safe_backup bmad/qf-bmad/core-config.yaml)
-    cat >> bmad/qf-bmad/core-config.yaml << 'STRUCT_EOF'
+    _config_backup=$(_safe_backup bmad/config/core-config.yaml)
+    cat >> bmad/config/core-config.yaml << 'STRUCT_EOF'
 
 structural_validation:
-  enabled: false
-  rules:
-    - name: story_status_sync
-      description: "Story status must match code state before marking complete"
-    - name: architecture_coverage
-      description: "All modules referenced in ARCHITECTURE.md"
-    - name: golden_principles_compliance
-      description: "Code adheres to golden-principles.md rules"
+  enabled: false  # Set true when validation scripts exist
+  checks:
+    # Uncomment and configure checks for your project:
+    # - name: "Dependency Direction"
+    #   command: "python lints/check_dependencies.py"
+    # - name: "File Size Limits"
+    #   command: "python lints/check_file_sizes.py --max 300"
+    # - name: "Naming Conventions"
+    #   command: "python lints/check_naming.py"
+    # - name: "Boundary Validation"
+    #   command: "python lints/check_boundaries.py"
 STRUCT_EOF
-    MODIFIED_DESCS+=("bmad/qf-bmad/core-config.yaml (structural_validation appended)")
+    MODIFIED_DESCS+=("bmad/config/core-config.yaml (structural_validation appended)")
     success "structural_validation added to core-config.yaml. Backup at ${_config_backup}."
   fi
 
@@ -570,7 +573,7 @@ STRUCT_EOF
   if _selected "lints-scaffold"; then
     info "Creating lints/ directory with starter scripts..."
     # Detect stack from core-config.yaml (fragile grep — falls back to python)
-    _lint_stack=$(grep -E '^\s+language:' bmad/qf-bmad/core-config.yaml 2>/dev/null | head -1 | sed 's/.*language: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
+    _lint_stack=$(grep -E '^\s+language:' bmad/config/core-config.yaml 2>/dev/null | head -1 | sed 's/.*language: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
     _scaffold_lints "${_lint_stack}"
     CREATED_FILES+=("lints/README.md")
     CREATED_DESCS+=("lints/ directory with starter validation scripts")
@@ -579,14 +582,14 @@ STRUCT_EOF
 
   # ── Apply: Living-document sections in epic template ─────────────────
   if _selected "living-docs"; then
-    if [[ -f "bmad/qf-bmad/templates/epic-template.md" ]]; then
+    if [[ -f "bmad/config/templates/epic-template.md" ]]; then
       info "Adding living-document sections to epic template..."
-      _epic_backup=$(_safe_backup bmad/qf-bmad/templates/epic-template.md)
+      _epic_backup=$(_safe_backup bmad/config/templates/epic-template.md)
 
       _appended=false
 
-      if ! grep -q "## Progress" bmad/qf-bmad/templates/epic-template.md; then
-        cat >> bmad/qf-bmad/templates/epic-template.md << 'LIVING_PROGRESS'
+      if ! grep -q "## Progress" bmad/config/templates/epic-template.md; then
+        cat >> bmad/config/templates/epic-template.md << 'LIVING_PROGRESS'
 
 ---
 
@@ -603,8 +606,8 @@ LIVING_PROGRESS
         _appended=true
       fi
 
-      if ! grep -q "## Surprises" bmad/qf-bmad/templates/epic-template.md; then
-        cat >> bmad/qf-bmad/templates/epic-template.md << 'LIVING_SURPRISES'
+      if ! grep -q "## Surprises" bmad/config/templates/epic-template.md; then
+        cat >> bmad/config/templates/epic-template.md << 'LIVING_SURPRISES'
 
 ## Surprises & Discoveries
 
@@ -617,8 +620,8 @@ LIVING_SURPRISES
         _appended=true
       fi
 
-      if ! grep -q "## Decision Log" bmad/qf-bmad/templates/epic-template.md; then
-        cat >> bmad/qf-bmad/templates/epic-template.md << 'LIVING_DECISIONS'
+      if ! grep -q "## Decision Log" bmad/config/templates/epic-template.md; then
+        cat >> bmad/config/templates/epic-template.md << 'LIVING_DECISIONS'
 
 ## Decision Log
 
@@ -633,8 +636,8 @@ LIVING_DECISIONS
         _appended=true
       fi
 
-      if ! grep -q "## Outcomes" bmad/qf-bmad/templates/epic-template.md; then
-        cat >> bmad/qf-bmad/templates/epic-template.md << 'LIVING_OUTCOMES'
+      if ! grep -q "## Outcomes" bmad/config/templates/epic-template.md; then
+        cat >> bmad/config/templates/epic-template.md << 'LIVING_OUTCOMES'
 
 ## Outcomes & Retrospective
 
@@ -648,7 +651,7 @@ LIVING_OUTCOMES
       fi
 
       if [[ "${_appended}" == true ]]; then
-        MODIFIED_DESCS+=("bmad/qf-bmad/templates/epic-template.md (living-document sections appended)")
+        MODIFIED_DESCS+=("bmad/config/templates/epic-template.md (living-document sections appended)")
         success "Living-document sections added to epic template."
       else
         rm -f "${_epic_backup}"
@@ -932,22 +935,22 @@ done
 
 # ─── Create directory structure ────────────────────────────────────────────────
 info "Creating BMAD directory structure..."
-mkdir -p bmad/qf-bmad/workflows
-mkdir -p bmad/qf-bmad/tasks
-mkdir -p bmad/qf-bmad/templates
-mkdir -p bmad/qf-bmad/checklists
-mkdir -p bmad/qf-bmad/agents/active
+mkdir -p bmad/config/workflows
+mkdir -p bmad/config/tasks
+mkdir -p bmad/config/templates
+mkdir -p bmad/config/checklists
+mkdir -p bmad/config/agents/active
 mkdir -p bmad/epics
 
 # ─── Copy template files ────────────────────────────────────────────────────────
 info "Copying workflow, task, template, and checklist files..."
-cp "${TEMPLATE_DIR}/workflows/"*.md bmad/qf-bmad/workflows/
-cp "${TEMPLATE_DIR}/tasks/"*.md bmad/qf-bmad/tasks/
-cp "${TEMPLATE_DIR}/templates/"* bmad/qf-bmad/templates/
-cp "${TEMPLATE_DIR}/checklists/"*.md bmad/qf-bmad/checklists/
+cp "${TEMPLATE_DIR}/workflows/"*.md bmad/config/workflows/
+cp "${TEMPLATE_DIR}/tasks/"*.md bmad/config/tasks/
+cp "${TEMPLATE_DIR}/templates/"* bmad/config/templates/
+cp "${TEMPLATE_DIR}/checklists/"*.md bmad/config/checklists/
 
 # Replace placeholders in checklist files
-for f in bmad/qf-bmad/checklists/*.md; do
+for f in bmad/config/checklists/*.md; do
   sed -i.bak \
     -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
     -e "s|{{DEPS_INSTALL_CMD}}|${DEPS_INSTALL_CMD}|g" \
@@ -973,18 +976,18 @@ else
   warn "ARCHITECTURE.md already exists — skipping."
 fi
 
-# ─── Copy golden-principles.md to bmad/qf-bmad/ ──────────────────────────────
+# ─── Copy golden-principles.md to bmad/config/ ──────────────────────────────
 if [[ -f "${TEMPLATE_DIR}/templates/golden-principles.md" ]]; then
   info "Creating golden-principles.md..."
-  cp "${TEMPLATE_DIR}/templates/golden-principles.md" bmad/qf-bmad/golden-principles.md
+  cp "${TEMPLATE_DIR}/templates/golden-principles.md" bmad/config/golden-principles.md
   sed -i.bak \
     -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
-    bmad/qf-bmad/golden-principles.md && rm bmad/qf-bmad/golden-principles.md.bak
-  success "bmad/qf-bmad/golden-principles.md created."
+    bmad/config/golden-principles.md && rm bmad/config/golden-principles.md.bak
+  success "bmad/config/golden-principles.md created."
 fi
 
 # Replace placeholders in task files
-for f in bmad/qf-bmad/tasks/*.md; do
+for f in bmad/config/tasks/*.md; do
   sed -i.bak \
     -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
     -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
@@ -993,7 +996,7 @@ for f in bmad/qf-bmad/tasks/*.md; do
 done
 
 # Replace placeholders in workflow files
-for f in bmad/qf-bmad/workflows/*.md; do
+for f in bmad/config/workflows/*.md; do
   sed -i.bak \
     -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
     -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
@@ -1003,7 +1006,7 @@ for f in bmad/qf-bmad/workflows/*.md; do
 done
 
 # Replace specialist table in bmad-flow.md with actual specialist list
-if [[ -f "bmad/qf-bmad/workflows/bmad-flow.md" ]]; then
+if [[ -f "bmad/config/workflows/bmad-flow.md" ]]; then
   FLOW_TABLE_TMP=$(mktemp)
   for spec in "${SPECIALIST_LIST[@]}"; do
     spec_cap="$(capitalize "${spec}")"
@@ -1019,8 +1022,8 @@ if [[ -f "bmad/qf-bmad/workflows/bmad-flow.md" ]]; then
       next
     }
     { print }
-  ' "bmad/qf-bmad/workflows/bmad-flow.md" > "bmad/qf-bmad/workflows/bmad-flow.md.tmp" && \
-    mv "bmad/qf-bmad/workflows/bmad-flow.md.tmp" "bmad/qf-bmad/workflows/bmad-flow.md"
+  ' "bmad/config/workflows/bmad-flow.md" > "bmad/config/workflows/bmad-flow.md.tmp" && \
+    mv "bmad/config/workflows/bmad-flow.md.tmp" "bmad/config/workflows/bmad-flow.md"
 
   rm -f "${FLOW_TABLE_TMP}"
 fi
@@ -1033,7 +1036,7 @@ info "Setting up specialist agents: ${SPECIALISTS_RAW}..."
 for spec in "${SPECIALIST_LIST[@]}"; do
   stub_file="${TEMPLATE_DIR}/agents/stubs/${spec}-specialist.md"
   if [[ -f "${stub_file}" ]]; then
-    dest="bmad/qf-bmad/agents/active/${spec}-specialist.md"
+    dest="bmad/config/agents/active/${spec}-specialist.md"
     if [[ -f "${dest}" ]]; then
       warn "  Skipping ${spec}-specialist.md (already exists, preserving customizations)"
     else
@@ -1101,7 +1104,7 @@ for spec in "${SPECIALIST_LIST[@]}"; do
   else
     warn "  No stub found for '${spec}' — creating blank agent file"
     SPEC_CAP="$(capitalize "${spec}")"
-    cat > "bmad/qf-bmad/agents/active/${spec}-specialist.md" << EOF
+    cat > "bmad/config/agents/active/${spec}-specialist.md" << EOF
 # ${SPEC_CAP} Specialist - ${PROJECT_NAME}
 
 ACTIVATION-NOTICE: Load this persona when working on ${spec} concerns.
@@ -1119,15 +1122,15 @@ EOF
 done
 
 # ─── Create BMAD Master ────────────────────────────────────────────────────────
-if [[ ! -f "bmad/qf-bmad/agents/bmad-master.md" ]]; then
+if [[ ! -f "bmad/config/agents/bmad-master.md" ]]; then
   info "Creating BMAD Master agent..."
-  cp "${TEMPLATE_DIR}/agents/bmad-master.md" bmad/qf-bmad/agents/bmad-master.md
+  cp "${TEMPLATE_DIR}/agents/bmad-master.md" bmad/config/agents/bmad-master.md
 
   sed -i.bak \
     -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
     -e "s|{{PROJECT_DESCRIPTION}}|${DESCRIPTION}|g" \
     -e "s|{{PROJECT_DOMAIN}}|${PROJECT_NAME}|g" \
-    "bmad/qf-bmad/agents/bmad-master.md" && rm "bmad/qf-bmad/agents/bmad-master.md.bak"
+    "bmad/config/agents/bmad-master.md" && rm "bmad/config/agents/bmad-master.md.bak"
 
   # Build specialist content files for awk-based replacement
   SPEC_LIST_TMP=$(mktemp)
@@ -1159,8 +1162,8 @@ if [[ ! -f "bmad/qf-bmad/agents/bmad-master.md" ]]; then
       next
     }
     { print }
-  ' "bmad/qf-bmad/agents/bmad-master.md" > "bmad/qf-bmad/agents/bmad-master.md.tmp" && \
-    mv "bmad/qf-bmad/agents/bmad-master.md.tmp" "bmad/qf-bmad/agents/bmad-master.md"
+  ' "bmad/config/agents/bmad-master.md" > "bmad/config/agents/bmad-master.md.tmp" && \
+    mv "bmad/config/agents/bmad-master.md.tmp" "bmad/config/agents/bmad-master.md"
 
   rm -f "${SPEC_LIST_TMP}" "${SPEC_TABLE_TMP}"
 
@@ -1169,15 +1172,15 @@ if [[ ! -f "bmad/qf-bmad/agents/bmad-master.md" ]]; then
     echo ""
     echo "### Active Specialists"
     for spec in "${SPECIALIST_LIST[@]}"; do
-      echo "- $(capitalize "${spec}") Specialist: see \`bmad/qf-bmad/agents/active/${spec}-specialist.md\`"
+      echo "- $(capitalize "${spec}") Specialist: see \`bmad/config/agents/active/${spec}-specialist.md\`"
     done
-  } >> bmad/qf-bmad/agents/bmad-master.md
+  } >> bmad/config/agents/bmad-master.md
 fi
 
 # ─── Create core-config.yaml ────────────────────────────────────────────────────
 info "Creating core-config.yaml..."
 
-cp "${TEMPLATE_DIR}/core-config.yaml.template" bmad/qf-bmad/core-config.yaml
+cp "${TEMPLATE_DIR}/core-config.yaml.template" bmad/config/core-config.yaml
 sed -i.bak \
   -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
   -e "s|{{PROJECT_DESCRIPTION}}|${DESCRIPTION}|g" \
@@ -1187,12 +1190,12 @@ sed -i.bak \
   -e "s|{{FORMAT_CHECK_COMMAND}}|${FORMAT_CHECK_CMD}|g" \
   -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
   -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
-  bmad/qf-bmad/core-config.yaml && rm bmad/qf-bmad/core-config.yaml.bak
+  bmad/config/core-config.yaml && rm bmad/config/core-config.yaml.bak
 # Append specialists section to core-config
-echo "" >> bmad/qf-bmad/core-config.yaml
-echo "specialists:" >> bmad/qf-bmad/core-config.yaml
+echo "" >> bmad/config/core-config.yaml
+echo "specialists:" >> bmad/config/core-config.yaml
 for spec in "${SPECIALIST_LIST[@]}"; do
-  echo "  - ${spec}" >> bmad/qf-bmad/core-config.yaml
+  echo "  - ${spec}" >> bmad/config/core-config.yaml
 done
 
 # ─── Full docs/ scaffold (--full flag) ─────────────────────────────────────────
@@ -1305,7 +1308,7 @@ fi
 # ─── Catchall: convert remaining {{PLACEHOLDERS}} to TODO markers ─────────────
 info "Checking for remaining placeholders..."
 REMAINING=0
-for f in CLAUDE.md bmad/qf-bmad/agents/*.md bmad/qf-bmad/agents/active/*.md bmad/qf-bmad/workflows/*.md bmad/qf-bmad/tasks/*.md bmad/qf-bmad/checklists/*.md bmad/qf-bmad/*.yaml; do
+for f in CLAUDE.md bmad/config/agents/*.md bmad/config/agents/active/*.md bmad/config/workflows/*.md bmad/config/tasks/*.md bmad/config/checklists/*.md bmad/config/*.yaml; do
   if [[ -f "${f}" ]] && grep -qE '\{\{[A-Z0-9_]+\}\}' "${f}" 2>/dev/null; then
     sed -i.bak -E 's/\{\{([A-Z0-9_]+)\}\}/<!-- TODO: Fill in \1. Run \/configure to auto-detect. -->/g' "${f}" && rm -f "${f}.bak"
     count=$(grep -c 'TODO: Fill in' "${f}" 2>/dev/null || true)
@@ -1331,12 +1334,12 @@ echo "  Database:      ${DATABASE}"
 echo "  Specialists:   ${SPECIALISTS_RAW}"
 echo ""
 echo -e "${BOLD}Created:${NC}"
-echo "  bmad/qf-bmad/workflows/     — lifecycle workflows"
-echo "  bmad/qf-bmad/tasks/         — task definitions"
-echo "  bmad/qf-bmad/templates/     — epic + story templates"
-echo "  bmad/qf-bmad/checklists/    — pre/post work checklists"
-echo "  bmad/qf-bmad/agents/        — BMAD master + specialist stubs"
-echo "  bmad/qf-bmad/golden-principles.md — code taste rules"
+echo "  bmad/config/workflows/     — lifecycle workflows"
+echo "  bmad/config/tasks/         — task definitions"
+echo "  bmad/config/templates/     — epic + story templates"
+echo "  bmad/config/checklists/    — pre/post work checklists"
+echo "  bmad/config/agents/        — BMAD master + specialist stubs"
+echo "  bmad/config/golden-principles.md — code taste rules"
 echo "  bmad/epics/                 — empty, ready for first epic"
 [[ ! -f "ARCHITECTURE.md" ]] || echo "  ARCHITECTURE.md             — architecture documentation (edit this!)"
 [[ ! -f "CLAUDE.md" ]] || echo "  CLAUDE.md                   — project instructions (edit this!)"

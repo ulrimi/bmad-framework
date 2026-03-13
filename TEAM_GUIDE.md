@@ -32,7 +32,7 @@ Created per project when you run `init-bmad`. Contains:
 your-repo/
 ├── CLAUDE.md           ← project-specific instructions (EDIT THIS)
 └── bmad/
-    ├── qf-bmad/
+    ├── config/
     │   ├── agents/     ← specialist personas (CUSTOMIZE THESE)
     │   ├── workflows/  ← development lifecycle protocols
     │   ├── tasks/      ← task definitions
@@ -75,6 +75,31 @@ ls -la ~/.claude/commands  # symlink → shows -> /path/to/bmad-framework/...
 
 **It only writes to the current project directory.** It never modifies `~/.claude/` or any other repo.
 
+### Full Scaffold (`--full`)
+
+For projects that want the complete knowledge architecture upfront:
+
+```bash
+init-bmad --full
+```
+
+This adds everything above plus:
+- `ARCHITECTURE.md` — system architecture (codemap, invariants, boundaries)
+- `bmad/config/golden-principles.md` — code taste rules
+- `docs/` — knowledge base directory (design-docs, exec-plans, product-specs, references)
+- `lints/` — custom structural validation scripts
+
+### Upgrading Existing Projects (`--upgrade`)
+
+For projects already using BMAD that want to adopt new features:
+
+```bash
+init-bmad --upgrade            # interactive gap analysis
+init-bmad --upgrade --dry-run  # preview what would change
+```
+
+This detects what's already in place and offers to non-destructively add missing artifacts (ARCHITECTURE.md, golden-principles.md, docs/ layer, etc.). It never overwrites existing files.
+
 ---
 
 ## Corporate / Existing Repo Setup
@@ -114,19 +139,23 @@ init-bmad           ← once per project
 /epic <feature>     ← creates epic + story breakdown
     ↓
 /implement <epic>   ← implements stories one by one with quality gates
+    ↓
+/maintain           ← periodic quality checks (pattern drift, doc freshness)
+/score              ← per-domain quality grades
 ```
 
 Each `/implement` cycle per story:
-1. Load story context and specialist persona
-2. Explore codebase
-3. Plan changes (shows you, asks approval)
-4. Implement
-5. Test
-6. Lint
-7. Simplify
-8. Self-review
-9. Commit
-10. Mark story complete
+1. Context verification (check ARCHITECTURE.md freshness)
+2. Load story context and specialist persona
+3. Explore codebase
+4. Plan changes (shows you, asks approval)
+5. Implement
+6. Test + lint
+7. Structural validation (if configured)
+8. Simplify (mandatory)
+9. Self-review + multi-agent review (mandatory)
+10. Mark story complete + update docs
+11. Commit (all changes in one commit)
 
 ---
 
@@ -149,8 +178,8 @@ If you used `--gitignore`, each developer has their own local copy. That's by de
 
 **"Which files should I edit?"**
 - `CLAUDE.md` — yes, this is your main config file
-- `bmad/qf-bmad/agents/active/*.md` — yes, customize specialist expertise
-- Everything else in `bmad/qf-bmad/` — generally leave alone unless you know what you're doing
+- `bmad/config/agents/active/*.md` — yes, customize specialist expertise
+- Everything else in `bmad/config/` — generally leave alone unless you know what you're doing
 
 **"How do I update the framework?"**
 ```bash
