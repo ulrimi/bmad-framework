@@ -5,7 +5,8 @@ Story ID: aap-002
 Epic: agent-autonomy-pipeline
 Priority: Medium
 Estimated Effort: M
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -87,8 +88,26 @@ None.
 - Verify /score command reads criteria and outputs assessments
 
 ## Definition of Done
-- [ ] QUALITY_SCORE.md template created
-- [ ] /score command created
-- [ ] Scoring criteria are measurable, not subjective
-- [ ] Score history section tracks trends over time
-- [ ] Story status updated
+- [x] QUALITY_SCORE.md template created
+- [x] /score command created
+- [x] Scoring criteria are measurable, not subjective
+- [x] Score history section tracks trends over time
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: bdccf97
+
+### Files Changed
+- `.claude/bmad-template/docs/QUALITY_SCORE.md` — Enhanced with per-domain scoring, grade scale, measurable criteria, history, and improvement priorities
+- `.claude/commands/score.md` — New /score command with 7-step evaluation process
+
+### Simplification Results
+- Files reviewed: 2
+- Issues found: 0
+- Status: No issues found
+
+### Self-Review Results
+- Findings: 0
+- Status: Clean

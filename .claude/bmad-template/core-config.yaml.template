@@ -17,6 +17,19 @@ commands:
   app_launch: "{{APP_LAUNCH_COMMAND}}"
   env_activate: "{{ENV_ACTIVATE_CMD}}"
 
+structural_validation:
+  enabled: false  # Set true when validation scripts exist
+  checks:
+    # Uncomment and configure checks for your project:
+    # - name: "Dependency Direction"
+    #   command: "python lints/check_dependencies.py"
+    # - name: "File Size Limits"
+    #   command: "python lints/check_file_sizes.py --max 300"
+    # - name: "Naming Conventions"
+    #   command: "python lints/check_naming.py"
+    # - name: "Boundary Validation"
+    #   command: "python lints/check_boundaries.py"
+
 quality_gates:
   pre_work:
     - env_active

@@ -5,7 +5,8 @@ Story ID: aap-001
 Epic: agent-autonomy-pipeline
 Priority: High
 Estimated Effort: M
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -104,8 +105,26 @@ Phase 6.5: Structural Validation
 - Verify graceful skip when not configured
 
 ## Definition of Done
-- [ ] Phase 6.5 added to implement.md
-- [ ] core-config.yaml template updated with structural_validation section
-- [ ] Graceful skip behavior when not configured
-- [ ] Fix-retry loop described with 3-cycle maximum
-- [ ] Story status updated
+- [x] Phase 6.5 added to implement.md
+- [x] core-config.yaml template updated with structural_validation section
+- [x] Graceful skip behavior when not configured
+- [x] Fix-retry loop described with 3-cycle maximum
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: d52cb0c
+
+### Files Changed
+- `.claude/commands/implement.md` — Added Phase 6.5 section and phase table entry
+- `.claude/bmad-template/core-config.yaml.template` — Added structural_validation section
+
+### Simplification Results
+- Files reviewed: 2
+- Issues found: 0
+- Status: No issues found
+
+### Self-Review Results
+- Findings: 0
+- Status: Clean
