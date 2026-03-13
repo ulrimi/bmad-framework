@@ -1,21 +1,27 @@
 # Tech Debt Tracker
 
-Track known technical debt for {{PROJECT_NAME}}. Items here represent intentional shortcuts or known issues that should be addressed but are not currently blocking.
+Track known technical debt for {{PROJECT_NAME}}. Items are added by `/maintain` scans and manual entries, then addressed through stories or opportunistic fixes.
 
-## Active Tech Debt
+## Active Items
 
-| ID | Area | Description | Severity | Added | Target |
-|----|------|-------------|----------|-------|--------|
-<!-- Add tech debt items here -->
+| ID | Category | Severity | Description | Affected | Recommended Fix | Effort | Status |
+|----|----------|----------|-------------|----------|-----------------|--------|--------|
+| TD-001 | example | low | Example item — delete this row | src/utils/ | Consolidate helpers | S | Open |
 
-## Severity Levels
+## Resolved Items
 
-- **High**: Actively causing issues or blocking features; address within current milestone
-- **Medium**: Will cause problems if left too long; schedule within next 2 milestones
-- **Low**: Minor inefficiency or code smell; address opportunistically
+| ID | Category | Description | Resolution | Resolved Date |
+|----|----------|-------------|------------|---------------|
+<!-- Move resolved items here with a brief resolution note -->
 
-## Resolved
+## Categories
 
-| ID | Area | Description | Resolved | Resolution |
-|----|------|-------------|----------|------------|
-<!-- Move resolved items here -->
+- **Code Quality**: Duplicated patterns, oversized files, missing validation
+- **Architecture**: Layer violations, circular dependencies, boundary issues
+- **Documentation**: Stale docs, missing docs, inaccurate architecture descriptions
+- **Testing**: Low coverage areas, missing edge case tests, flaky tests
+- **Dependencies**: Outdated packages, unnecessary dependencies, version conflicts
+
+## Last Scanned
+
+_Not yet scanned. Run `/maintain` to populate._
