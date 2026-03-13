@@ -5,7 +5,8 @@ Story ID: aap-006
 Epic: agent-autonomy-pipeline
 Priority: Low
 Estimated Effort: M
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -83,8 +84,36 @@ FIX: [What to do instead — specific enough for an agent to act on]
 - Run a lint script and verify error message format
 
 ## Definition of Done
-- [ ] lints/ directory scaffolded by init-bmad --full
-- [ ] Stack-specific starter scripts (Python, TypeScript minimum)
-- [ ] Error messages follow agent-friendly format
-- [ ] README explains pattern and integration
-- [ ] Story status updated
+- [x] lints/ directory scaffolded by init-bmad --full
+- [x] Stack-specific starter scripts (Python, TypeScript minimum)
+- [x] Error messages follow agent-friendly format
+- [x] README explains pattern and integration
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+
+### Files Changed
+- `.claude/bmad-template/lints/README.md` — Explains custom lints pattern and agent-friendly format
+- `.claude/bmad-template/lints/python/check_file_sizes.py` — File size checker with VIOLATION/FILE/RULE/WHY/FIX output
+- `.claude/bmad-template/lints/python/check_imports.py` — Import direction checker with configurable layers
+- `.claude/bmad-template/lints/typescript/check-file-sizes.js` — TypeScript equivalent of file size checker
+- `.claude/bmad-template/lints/typescript/check-imports.js` — TypeScript equivalent of import checker
+- `.claude/scripts/init-bmad` — Added _scaffold_lints helper, --full creates lints/, --upgrade detects missing lints/
+
+### Design Decisions
+- Scripts are copied flat into `lints/` (not into subdirectories) for simplicity
+- Extracted `_scaffold_lints()` helper in init-bmad to avoid duplication between --full and --upgrade paths
+- Default layers are configurable via CLI args rather than config files
+
+### Simplification Results
+- Files reviewed: 7
+- Issues found: 8 (2 MEDIUM, 6 LOW)
+- Issues fixed: 2
+- Status: Completed
+
+### CodeRabbit Review Results
+- Findings: 1 total (0 critical, 1 suggestion, 0 nits)
+- All addressed: Yes
+- Re-review cycles: 1

@@ -38,10 +38,10 @@ These changes push BMAD from "disciplined agent workflow" toward "fully autonomo
 |---|-------|-------------|--------|--------------|--------|
 | 001 | structural-validation | Add Phase 6.5 structural validation hooks to /implement with customizable checks | M | None | ✅ Complete |
 | 002 | quality-scoring | Create QUALITY_SCORE.md template and /score command for per-domain quality grading | M | None | ✅ Complete |
-| 003 | maintain-command | Create /maintain command for pattern scanning, doc freshness, and tech debt tracking | L | 002 | Draft |
+| 003 | maintain-command | Create /maintain command for pattern scanning, doc freshness, and tech debt tracking | L | 002 | ✅ Complete |
 | 004 | multi-agent-review | Enhance Phase 8 with multi-agent review: specialist domain review + escalation rules | M | None | ✅ Complete |
 | 005 | app-driving-scaffold | Add application_driving capability blocks to specialist templates and runtime_validation to story template | M | 001 | ✅ Complete |
-| 006 | lint-scaffold | Add lints/ directory scaffold to init-bmad with per-stack starter configs and agent-friendly error messages | M | 001 | Draft |
+| 006 | lint-scaffold | Add lints/ directory scaffold to init-bmad with per-stack starter configs and agent-friendly error messages | M | 001 | ✅ Complete |
 | 007 | context-verification | Add Phase 0.5 (context verification) and Phase 10.5 (knowledge update) to /implement lifecycle | S | None | ✅ Complete |
 | 008 | tech-debt-tracker | Create tech-debt-tracker.md template, integrate with /maintain for continuous debt management | S | 003, HEF-005 | Draft |
 

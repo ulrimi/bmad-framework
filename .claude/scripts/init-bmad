@@ -26,6 +26,31 @@ warn()    { echo -e "${YELLOW}[init-bmad]${NC} $*"; }
 error()   { echo -e "${RED}[init-bmad] ERROR:${NC} $*" >&2; exit 1; }
 prompt()  { echo -e "${CYAN}${BOLD}?${NC} $*"; }
 
+# Scaffold lints/ directory with stack-appropriate starter scripts.
+# Usage: _scaffold_lints <stack>  (e.g., python, typescript)
+_scaffold_lints() {
+  local _stack="${1:-python}"
+  mkdir -p lints
+
+  if [[ -f "${TEMPLATE_DIR}/lints/README.md" ]]; then
+    cp "${TEMPLATE_DIR}/lints/README.md" lints/README.md
+  fi
+
+  case "${_stack}" in
+    python)
+      [[ -d "${TEMPLATE_DIR}/lints/python" ]] && cp "${TEMPLATE_DIR}/lints/python/"*.py lints/ 2>/dev/null || true
+      ;;
+    typescript|javascript)
+      [[ -d "${TEMPLATE_DIR}/lints/typescript" ]] && cp "${TEMPLATE_DIR}/lints/typescript/"*.js lints/ 2>/dev/null || true
+      ;;
+    *)
+      [[ -d "${TEMPLATE_DIR}/lints/python" ]] && cp "${TEMPLATE_DIR}/lints/python/"*.py lints/ 2>/dev/null || true
+      ;;
+  esac
+
+  chmod +x lints/*.py lints/*.js 2>/dev/null || true
+}
+
 # ─── Pre-flight ───────────────────────────────────────────────────────────────
 if [[ ! -d "${TEMPLATE_DIR}" ]]; then
   error "Template directory not found: ${TEMPLATE_DIR}\nRun: ls ~/.claude/bmad-template to verify install."
@@ -201,7 +226,13 @@ if [[ "${UPGRADE_MODE}" == true ]]; then
     MISSING_IDS+=("tech-debt-tracker")
   fi
 
-  # 9. Living-document sections in epic template
+  # 9. lints/ directory
+  if [[ ! -d "lints" ]]; then
+    MISSING+=("lints/ — Custom structural validation scripts with agent-friendly error messages")
+    MISSING_IDS+=("lints-scaffold")
+  fi
+
+  # 10. Living-document sections in epic template
   if [[ -f "bmad/qf-bmad/templates/epic-template.md" ]]; then
     _missing_sections=0
     grep -q "## Progress" bmad/qf-bmad/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
@@ -253,6 +284,7 @@ if [[ "${UPGRADE_MODE}" == true ]]; then
         quality-score)          echo "  CREATE  docs/QUALITY_SCORE.md" ;;
         structural-validation)  echo "  MODIFY  bmad/qf-bmad/core-config.yaml (append structural_validation)" ;;
         tech-debt-tracker)      echo "  CREATE  docs/exec-plans/tech-debt-tracker.md" ;;
+        lints-scaffold)         echo "  CREATE  lints/ directory with starter validation scripts" ;;
         living-docs)            echo "  MODIFY  bmad/qf-bmad/templates/epic-template.md (append sections)" ;;
       esac
     done
@@ -534,6 +566,17 @@ STRUCT_EOF
     fi
   fi
 
+  # ── Apply: lints/ scaffold ──────────────────────────────────────────
+  if _selected "lints-scaffold"; then
+    info "Creating lints/ directory with starter scripts..."
+    # Detect stack from core-config.yaml (fragile grep — falls back to python)
+    _lint_stack=$(grep -E '^\s+language:' bmad/qf-bmad/core-config.yaml 2>/dev/null | head -1 | sed 's/.*language: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
+    _scaffold_lints "${_lint_stack}"
+    CREATED_FILES+=("lints/README.md")
+    CREATED_DESCS+=("lints/ directory with starter validation scripts")
+    success "lints/ directory created with ${_lint_stack:-python} starter scripts."
+  fi
+
   # ── Apply: Living-document sections in epic template ─────────────────
   if _selected "living-docs"; then
     if [[ -f "bmad/qf-bmad/templates/epic-template.md" ]]; then
@@ -652,6 +695,7 @@ LIVING_OUTCOMES
       *QUALITY_SCORE*) echo "  • Set initial quality scores in QUALITY_SCORE.md" ;;
       *tech-debt*) echo "  • Log known tech debt in tech-debt-tracker.md" ;;
       "docs/ directory"*) echo "  • Populate docs/ with design documents and references" ;;
+      *lints*) echo "  • Customize lint scripts in lints/ for your architecture's layer boundaries" ;;
     esac
   done
   for item in ${MODIFIED_DESCS[@]+"${MODIFIED_DESCS[@]}"}; do
@@ -1181,6 +1225,11 @@ if [[ "${FULL_SCAFFOLD}" == true ]]; then
   fi
 
   success "docs/ directory scaffolded: design-docs, exec-plans, product-specs, references, generated"
+
+  # ─── Lint scaffold (part of --full) ──────────────────────────────────────────
+  info "Scaffolding lints/ directory..."
+  _scaffold_lints "${PRIMARY_STACK}"
+  success "lints/ directory scaffolded with ${PRIMARY_STACK:-python} starter scripts"
 fi
 
 # ─── Generate CLAUDE.md ────────────────────────────────────────────────────────
@@ -1292,6 +1341,7 @@ echo "  bmad/epics/                 — empty, ready for first epic"
 [[ ! -f "ARCHITECTURE.md" ]] || echo "  ARCHITECTURE.md             — architecture documentation (edit this!)"
 [[ ! -f "CLAUDE.md" ]] || echo "  CLAUDE.md                   — project instructions (edit this!)"
 [[ "${FULL_SCAFFOLD}" == true ]] && echo "  docs/                       — knowledge base (design-docs, exec-plans, etc.)"
+[[ "${FULL_SCAFFOLD}" == true ]] && echo "  lints/                      — custom structural validation scripts"
 echo ""
 echo -e "${BOLD}Next steps:${NC}"
 echo "  1. Open Claude Code:  claude"
