@@ -5,7 +5,8 @@ Story ID: hef-006
 Epic: harness-engineering-foundation
 Priority: Medium
 Estimated Effort: M
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -83,8 +84,32 @@ ExecPlan specification: Section 5 of 01-harness-engineering-guide.md
 - Verify self-containment guidance is prominent
 
 ## Definition of Done
-- [ ] exec-plan-template.md created with all spec sections
-- [ ] /plan command created and functional
-- [ ] Template enforces self-containment principle
-- [ ] Graceful fallback when docs/ directory doesn't exist
-- [ ] Story status updated
+- [x] exec-plan-template.md created with all spec sections
+- [x] /plan command created and functional
+- [x] Template enforces self-containment principle
+- [x] Graceful fallback when docs/ directory doesn't exist
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: e0607ee
+
+### Files Changed
+- `.claude/bmad-template/templates/exec-plan-template.md` — New ExecPlan template with all 11 spec sections
+- `.claude/commands/plan.md` — New /plan command with context-gathering agents and docs/ fallback
+
+### Simplification Results
+- Files reviewed: 2
+- Issues found: 0
+- Issues fixed: 0
+- Lines removed: 0
+- Status: No issues found
+
+### CodeRabbit Review Results
+- Skipped per user request
+
+### Notes
+- Template self-containment principle is a blockquote at document top for maximum visibility
+- /plan command follows the /epic command pattern (parallel Explore + Plan agents)
+- Progress section uses ISO timestamps with `HH:MMZ` granularity per spec
