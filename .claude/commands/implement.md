@@ -156,6 +156,7 @@ For EACH story in the queue, execute this complete cycle:
 | 4 | Implementation Execution | ✅ | Write code file by file with todo tracking |
 | 5 | Testing | ✅ | Run existing tests, write new tests |
 | 6 | Validation & Linting | ✅ | Lint, type check, verify acceptance criteria |
+| 6.5 | Structural Validation | Configurable | Run project-specific structural checks (dependency direction, naming, file size) |
 | **7** | **Code Simplification** | **✅ MANDATORY** | **Review for over-engineering, apply Boy Scout Rule** |
 | **8** | **Self-Review** | **✅ MANDATORY** | **Run /review on own changes, fix all findings** |
 | 9 | Commit | ✅ | Stage, commit with gate check for Phases 7 & 8 |
@@ -307,6 +308,51 @@ For EACH story in the queue, execute this complete cycle:
     - [ ] AC3: [description] - VERIFIED by [how]
 
     If ANY AC is not met: implement missing functionality
+```
+
+### Phase 6.5: Structural Validation (Configurable)
+
+**Purpose**: Enforce architectural invariants mechanically — catch code that works but violates structural boundaries.
+
+> This phase runs only when `structural_validation.enabled: true` in the project's `core-config.yaml`.
+> If not configured, it logs a skip message and proceeds to Phase 7.
+
+```yaml
+6.5.1 Check Configuration:
+    Read core-config.yaml and look for structural_validation section.
+
+    If structural_validation.enabled is false or missing:
+      Log: "No structural validation configured — skipping Phase 6.5"
+      Proceed to Phase 7.
+
+6.5.2 Run Configured Checks:
+    For each entry in structural_validation.checks:
+      ```bash
+      # Run the configured check command
+      $CHECK_COMMAND
+      ```
+      - If check passes: log success, continue to next check
+      - If check fails: proceed to 6.5.3
+
+6.5.3 Fix-Retry Loop (max 3 cycles per check):
+    For each failed check:
+      a) Read the error output (check scripts should include remediation hints)
+      b) Attempt to fix the violation
+      c) Re-run the failed check
+      d) If fixed: log fix and continue
+      e) If still failing after 3 cycles:
+         - If the violation requires architectural discussion → flag for human review
+         - Ask: "Structural check '[name]' failing after 3 fix attempts.
+                 [S]kip check, [A]sk for help, [Q]uit"
+
+6.5.4 Log Results:
+    Record in story completion notes:
+
+    ### Structural Validation Results
+    - Checks configured: [N]
+    - Checks passed: [X]
+    - Checks fixed: [Y] (with retry)
+    - Checks skipped: [Z]
 ```
 
 ### Phase 7: Code Simplification (MANDATORY)
