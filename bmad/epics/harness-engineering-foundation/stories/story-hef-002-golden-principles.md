@@ -5,7 +5,8 @@ Story ID: hef-002
 Epic: harness-engineering-foundation
 Priority: High
 Estimated Effort: S
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -82,8 +83,27 @@ None.
 - Verify CLAUDE.md template references golden-principles.md
 
 ## Definition of Done
-- [ ] golden-principles.md template created
-- [ ] init-bmad copies it to bmad/qf-bmad/
-- [ ] CLAUDE.md template references it
-- [ ] Principles are generic enough for any stack
-- [ ] Story status updated
+- [x] golden-principles.md template created
+- [x] init-bmad copies it to bmad/qf-bmad/
+- [x] CLAUDE.md template references it
+- [x] Principles are generic enough for any stack
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: 4cbccb5
+
+### Files Changed
+- `.claude/bmad-template/templates/golden-principles.md` — Created (13 rules across 5 categories)
+- `.claude/bmad-template/CLAUDE.md.template` — Added golden-principles.md to Key References table
+- `.claude/scripts/init-bmad` — Added golden-principles copy logic
+
+### Simplification Results
+- Files reviewed: 3
+- Issues found: 0
+- Status: No issues found
+
+### Self-Review Results
+- Findings: 0
+- All acceptance criteria verified

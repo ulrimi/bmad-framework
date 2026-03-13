@@ -5,7 +5,8 @@ Story ID: hef-001
 Epic: harness-engineering-foundation
 Priority: High
 Estimated Effort: M
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -80,9 +81,27 @@ None — this is a foundational template.
 - Verify template sections match matklad's pattern
 
 ## Definition of Done
-- [ ] architecture-template.md created in bmad-template/templates/
-- [ ] init-bmad copies template to ARCHITECTURE.md at repo root
-- [ ] Template follows matklad's pattern (Overview, Codemap, Invariants, Boundaries, Cross-Cutting)
-- [ ] Placeholders are project-aware ({{PROJECT_NAME}}, {{PROJECT_DESCRIPTION}})
-- [ ] Lint check passes
-- [ ] Story status updated
+- [x] architecture-template.md created in bmad-template/templates/
+- [x] init-bmad copies template to ARCHITECTURE.md at repo root
+- [x] Template follows matklad's pattern (Overview, Codemap, Invariants, Boundaries, Cross-Cutting)
+- [x] Placeholders are project-aware ({{PROJECT_NAME}}, {{PROJECT_DESCRIPTION}})
+- [x] Lint check passes
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: 4cbccb5
+
+### Files Changed
+- `.claude/bmad-template/templates/architecture-template.md` — Created (96 lines, matklad's pattern)
+- `.claude/scripts/init-bmad` — Added ARCHITECTURE.md copy logic with placeholder substitution
+
+### Simplification Results
+- Files reviewed: 2
+- Issues found: 0
+- Status: No issues found
+
+### Self-Review Results
+- Findings: 0
+- All acceptance criteria verified
