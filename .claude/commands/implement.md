@@ -158,7 +158,7 @@ For EACH story in the queue, execute this complete cycle:
 | 6 | Validation & Linting | ✅ | Lint, type check, verify acceptance criteria |
 | 6.5 | Structural Validation | Configurable | Run project-specific structural checks (dependency direction, naming, file size) |
 | **7** | **Code Simplification** | **✅ MANDATORY** | **Review for over-engineering, apply Boy Scout Rule** |
-| **8** | **Self-Review** | **✅ MANDATORY** | **Run /review on own changes, fix all findings** |
+| **8** | **Self-Review + Multi-Agent Review** | **✅ MANDATORY** | **Self-review + specialist domain reviews with escalation** |
 | 9 | Commit | ✅ | Stage, commit with gate check for Phases 7 & 8 |
 | 10 | Story Completion | ✅ | Update story file with completion notes |
 | **11** | **Push & Create PR** | **✅ AUTO** | **Push branch, create GitHub PR (runs after ALL stories complete)** |
@@ -444,11 +444,12 @@ For EACH story in the queue, execute this complete cycle:
 
 **IMPORTANT**: Never skip this phase silently. If skipping due to `--no-simplify`, explicitly log: "Simplification skipped per --no-simplify flag."
 
-### Phase 8: Self-Review (MANDATORY)
+### Phase 8: Self-Review + Multi-Agent Review (MANDATORY)
 
-**Purpose**: Run the `/review` command on your own uncommitted changes. Automatically fix meaningful issues before committing.
+**Purpose**: Run `/review` on your own changes, then route reviews to domain-specialist agents for deeper analysis. Fix meaningful issues before committing.
 
 > **CRITICAL**: This phase runs on EVERY implementation. It is NOT optional.
+> Multi-agent review runs when specialist agents are available in `bmad/qf-bmad/agents/active/`.
 
 ```yaml
 8.1 Run /review on Uncommitted Changes:
@@ -460,7 +461,7 @@ For EACH story in the queue, execute this complete cycle:
     - Style and consistency with CLAUDE.md conventions
     - Test coverage gaps
 
-8.2 Process Findings:
+8.2 Process Self-Review Findings:
     Automatically fix medium-severity and above. Nits are informational only.
 
     | Priority | Action |
@@ -470,7 +471,7 @@ For EACH story in the queue, execute this complete cycle:
     | Medium (improvements, consistency) | Fix |
     | Nits (style, naming, minor) | Skip — log but do not fix |
 
-8.3 Apply Fixes:
+8.3 Apply Self-Review Fixes:
     For each medium+ finding:
     a) Read the affected file
     b) Apply the fix
@@ -478,7 +479,56 @@ For EACH story in the queue, execute this complete cycle:
 
     Do NOT fix nits — they add churn without meaningful value.
 
-8.4 Re-Validate After Fixes:
+8.4 Multi-Agent Review — Determine Specialist Domains:
+    Analyze which files were changed and map to specialist agents:
+
+    a) List all files modified in this story implementation
+    b) Match file paths/modules to specialist domains:
+       - auth, security, crypto files → security-perspective review
+       - API routes, endpoints → backend-specialist review
+       - UI components, templates → frontend-specialist review
+       - Database, data layer, caching → data-specialist review
+       - Infrastructure, CI/CD, deploy → infra-specialist review
+       - Tests, fixtures, QA → qa-specialist review
+    c) Load matching specialist agent files from bmad/qf-bmad/agents/active/
+
+    If no specialist agents exist in the project:
+      Log: "No specialist agents configured — skipping multi-agent review"
+      Proceed to 8.7
+
+8.5 Multi-Agent Review — Specialist Reviews:
+    For each relevant specialist:
+
+    a) Spawn a review subagent (Agent tool) with the specialist persona loaded
+    b) Provide the subagent with:
+       - The diff of all changes
+       - The story's acceptance criteria
+       - Instruction: "Review from [specialist] perspective. Output findings
+         with severity (critical/high/medium/nit) and specialist attribution."
+    c) Collect findings with specialist attribution:
+       - Format: "[Specialist] Finding description" (e.g., "[Security] API key exposed in error response")
+
+    Run specialist reviews in parallel where possible.
+
+8.6 Multi-Agent Review — Merge and Address Findings:
+    a) Merge all specialist findings with self-review findings
+    b) Deduplicate (same issue found by multiple reviewers)
+    c) Sort by severity (critical → high → medium → nit)
+    d) Address medium+ findings (apply fixes)
+    e) If >10 lines changed in fixes, re-run specialist reviews (max 3 cycles)
+
+    Escalation Rules — flag for human review instead of resolving autonomously:
+    - Conflicting guidance between specialists (e.g., security says add validation,
+      performance says remove it)
+    - Architectural boundary violation that needs design discussion
+    - Security-critical finding with unclear remediation
+    - Any finding where the correct fix is ambiguous across domains
+
+    If escalation triggered:
+      "⚠️ Escalation: [description]. Requires human judgment.
+       [C]ontinue with best guess, [A]sk for guidance, [S]kip this finding"
+
+8.7 Re-Validate After All Fixes:
     MUST re-run tests and linting after any review fixes:
 
     # Re-run tests (use Bash timeout=180000)
@@ -489,13 +539,20 @@ For EACH story in the queue, execute this complete cycle:
       - Adjust the fix to maintain correctness
       - Re-validate until green
 
-8.5 Log Review Outcome:
+8.8 Log Review Outcome:
     Record in story completion notes:
 
     ### Self-Review Results
     - Findings: [N] total ([X] critical/high, [Y] medium, [Z] nits)
     - Fixed: [N] (medium+)
     - Skipped: [N] nits
+
+    ### Multi-Agent Review Results
+    - Specialists consulted: [list, e.g., security, backend, data]
+    - Findings: [N] total ([X] critical/high, [Y] medium, [Z] nits)
+    - Fixed: [N]
+    - Escalated: [N] (with reasons)
+    - Review cycles: [N]
 ```
 
 ### Phase 9: Commit
@@ -509,9 +566,10 @@ For EACH story in the queue, execute this complete cycle:
     - Sequential thinking tool was invoked for complexity scan
     - Explicit "Simplification skipped per --no-simplify flag" log
 
-    Phase 8 (Self-Review) evidence (at least one):
+    Phase 8 (Self-Review + Multi-Agent Review) evidence (at least one):
     - /review was run and findings were processed
     - Self-review results logged (even if "0 findings")
+    - Multi-agent review results logged (or "No specialist agents configured" skip logged)
 
     If either is missing: STOP and run the missing phase before proceeding.
 
@@ -580,6 +638,12 @@ For EACH story in the queue, execute this complete cycle:
     - Findings: [N] total ([X] critical/high, [Y] medium, [Z] nits)
     - Fixed: [N] (medium+)
     - Skipped: [N] nits
+
+    ### Multi-Agent Review Results (if specialists available)
+    - Specialists consulted: [list]
+    - Findings: [N] total
+    - Fixed: [N]
+    - Escalated: [N]
 
     ### Notes
     - [Any implementation decisions or deviations]
@@ -715,7 +779,7 @@ Phase 11.5 - Create PR:
     - [x] All tests pass
     - [x] Linting passes
     - [x] Code simplification review (Phase 7)
-    - [x] Self-review (Phase 8)
+    - [x] Self-review + multi-agent review (Phase 8)
     - [x] Acceptance criteria verified per story
 
     ## Test Plan
