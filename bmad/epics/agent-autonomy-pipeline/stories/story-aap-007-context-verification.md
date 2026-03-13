@@ -5,7 +5,8 @@ Story ID: aap-007
 Epic: agent-autonomy-pipeline
 Priority: Medium
 Estimated Effort: S
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -99,8 +100,25 @@ Phase 10.5: Knowledge Update (optional, before commit/PR)
 - Verify they don't block when docs don't exist
 
 ## Definition of Done
-- [ ] Phase 0.5 added to implement.md
-- [ ] Phase 10.5 added to implement.md (between story completion and commit/PR)
-- [ ] Both phases are lightweight and non-blocking by default
-- [ ] Graceful handling when docs don't exist
-- [ ] Story status updated
+- [x] Phase 0.5 added to implement.md
+- [x] Phase 10.5 added to implement.md (between story completion and commit/PR)
+- [x] Both phases are lightweight and non-blocking by default
+- [x] Graceful handling when docs don't exist
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: 82c04a4
+
+### Files Changed
+- `.claude/commands/implement.md` — Added Phase 0.5 (Context Verification) and Phase 10.5 (Knowledge Update), updated phase table
+
+### Simplification Results
+- Files reviewed: 1
+- Issues found: 0
+- Status: No issues found
+
+### Self-Review Results
+- Findings: 0
+- Status: Clean
