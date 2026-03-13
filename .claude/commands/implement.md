@@ -158,6 +158,7 @@ For EACH story in the queue, execute this complete cycle:
 | 5 | Testing | ✅ | Run existing tests, write new tests |
 | 6 | Validation & Linting | ✅ | Lint, type check, verify acceptance criteria |
 | 6.5 | Structural Validation | Configurable | Run project-specific structural checks (dependency direction, naming, file size) |
+| 6.75 | Runtime Validation | Configurable | Launch app and run acceptance checks from story's runtime_validation section |
 | **7** | **Code Simplification** | **✅ MANDATORY** | **Review for over-engineering, apply Boy Scout Rule** |
 | **8** | **Self-Review + Multi-Agent Review** | **✅ MANDATORY** | **Self-review + specialist domain reviews with escalation** |
 | 9 | Commit | ✅ | Stage, commit with gate check for Phases 7 & 8 |
@@ -396,6 +397,94 @@ For EACH story in the queue, execute this complete cycle:
     - Checks fixed: [Y] (with retry)
     - Checks skipped: [Z]
 ```
+
+### Phase 6.75: Runtime Validation (Configurable)
+
+**Purpose**: Launch the application and verify acceptance criteria against the running system — catching configuration errors, integration mismatches, and runtime issues that unit tests miss.
+
+> This phase runs only when the story file contains a `runtime_validation` section with checks configured.
+> If no `runtime_validation` section exists, it logs a skip message and proceeds to Phase 7.
+
+```yaml
+6.75.1 Check Story for Runtime Validation:
+    Parse the current story file for a runtime_validation section.
+
+    If no runtime_validation section or it is commented out:
+      Log: "No runtime_validation configured in story — skipping Phase 6.75"
+      Proceed to Phase 7.
+
+6.75.2 Launch Application:
+    Read launch_command from the story's runtime_validation section.
+    If launch_command is not set, fall back to core-config.yaml commands.app_launch.
+
+    ```bash
+    # Start the application in the background
+    $LAUNCH_COMMAND &
+    APP_PID=$!
+
+    # Wait for application to be ready (up to 30 seconds)
+    for i in $(seq 1 30); do
+      if kill -0 $APP_PID 2>/dev/null; then
+        # App process is running, try health check if configured
+        break
+      fi
+      sleep 1
+    done
+    ```
+
+    If the application fails to start:
+      Log: "Application failed to start — skipping runtime validation"
+      Proceed to Phase 7 (do not block on startup failures)
+
+6.75.3 Run Acceptance Checks:
+    For each entry in runtime_validation.acceptance_checks:
+
+      ```bash
+      # Run the check command
+      RESULT=$($CHECK_COMMAND)
+      ```
+
+      Compare RESULT to the expected value:
+      - If match: log "✅ [description]: passed"
+      - If no match: log "❌ [description]: expected [$expected], got [$RESULT]"
+        Mark as failed
+
+    If any check fails:
+      Proceed to 6.75.4
+
+    If all checks pass:
+      Log: "All runtime validation checks passed"
+      Proceed to 6.75.5
+
+6.75.4 Fix-Retry Loop (max 3 cycles):
+    For each failed check:
+      a) Analyze the failure output
+      b) Attempt to fix the underlying issue in code
+      c) Restart the application if needed
+      d) Re-run the failed check
+      e) If fixed: log fix and continue
+      f) If still failing after 3 cycles:
+         Ask: "Runtime check '[description]' failing after 3 attempts.
+               [S]kip check, [A]sk for help, [Q]uit"
+
+6.75.5 Cleanup:
+    ```bash
+    # Stop the application
+    kill $APP_PID 2>/dev/null
+    wait $APP_PID 2>/dev/null
+    ```
+
+6.75.6 Log Results:
+    Record in story completion notes:
+
+    ### Runtime Validation Results
+    - Checks configured: [N]
+    - Checks passed: [X]
+    - Checks fixed: [Y] (with retry)
+    - Checks skipped: [Z]
+```
+
+---
 
 ### Phase 7: Code Simplification (MANDATORY)
 

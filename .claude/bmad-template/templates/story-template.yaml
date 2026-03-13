@@ -101,6 +101,22 @@ sections:
         """Description."""
       ```
 
+  - id: runtime_validation
+    title: Runtime Validation
+    optional: true
+    template: |
+      ## Runtime Validation (optional — for user-facing stories)
+      <!-- Uncomment and configure to enable runtime checks during /implement Phase 6.75 -->
+      <!-- The agent will launch the app, run these checks, and verify expected output -->
+      ```yaml
+      # runtime_validation:
+      #   launch_command: "{{APP_LAUNCH_COMMAND}}"
+      #   acceptance_checks:
+      #     - description: "Health endpoint returns 200"
+      #       command: "curl -s -o /dev/null -w '%{http_code}' http://localhost:{{PORT}}/health"
+      #       expected: "200"
+      ```
+
   - id: testing_requirements
     title: Testing Requirements
     template: |

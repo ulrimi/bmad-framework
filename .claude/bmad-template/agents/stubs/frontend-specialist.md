@@ -45,3 +45,20 @@ activation-instructions:
 - [ ] Loading states are shown for async operations
 - [ ] Error states are handled gracefully
 - [ ] Components tested with representative data
+
+## Application Driving
+<!-- TODO: Configure these for your project's application-driving capabilities -->
+<!-- Uncomment and fill in to enable runtime validation during /implement -->
+```yaml
+# application_driving:
+#   launch_command: "{{APP_LAUNCH_COMMAND}}"
+#   health_check: "curl -s http://localhost:{{PORT}}/health"
+#   ui_validation:
+#     enabled: false
+#     tool: "playwright"
+#     screenshot_dir: "tests/screenshots/"
+#   observability:
+#     enabled: false
+#     log_query: "# e.g., docker logs app --tail 100"
+#     metrics_query: "# e.g., curl localhost:9090/metrics"
+```
