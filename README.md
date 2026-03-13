@@ -32,14 +32,16 @@ BMAD adds slash commands to Claude Code that orchestrate multi-agent, story-driv
 | `/bmad <topic>` | Full 5-phase orchestration with parallel agents |
 | `/epic <name>` | Create new epic with context gathering |
 | `/story <path>` | Create or implement a story |
-| `/implement <path>` | Execute stories to completion (10-phase cycle) |
+| `/implement <path>` | Execute stories to completion (multi-phase cycle) |
 | `/configure` | Auto-detect project settings from codebase |
 | `/explore <topic>` | Deep codebase exploration |
 | `/think <question>` | Sequential reasoning without BMAD structure |
 | `/review [depth]` | Code review with auto-detected depth |
 | `/simplify [path]` | Analyze and reduce code complexity |
+| `/maintain` | Repository-wide quality and consistency checks |
+| `/score` | Per-domain quality scoring and tracking |
+| `/plan` | Create execution plans for complex work |
 | `/refine <epic>` | Gap analysis on existing epic |
-| `/dev` | Development environment control |
 | `/pr` | Create pull request |
 | `/push` | Git push with upstream tracking |
 | `/sync` | Git sync (fetch + rebase) |
@@ -67,7 +69,7 @@ Then open a new terminal (or `source ~/.zshrc`).
 
 | Location | Contents |
 |----------|---------|
-| `~/.claude/commands/` | 18 slash-command skill definitions |
+| `~/.claude/commands/` | 20 slash-command skill definitions |
 | `~/.claude/bmad-template/` | Project scaffold templates |
 | `~/.claude/scripts/init-bmad` | Project bootstrapper (added to PATH) |
 | `~/.claude/scripts/claude-feature` | Worktree-based parallel development (added to PATH) |
@@ -106,9 +108,11 @@ init-bmad                   # interactive setup
 ```
 your-project/
 ├── CLAUDE.md                       ← Project instructions (EDIT THIS)
+├── ARCHITECTURE.md                 ← System architecture (EDIT THIS)
 └── bmad/
-    ├── qf-bmad/
+    ├── config/
     │   ├── core-config.yaml        ← Project config (commands, specialists)
+    │   ├── golden-principles.md    ← Code taste rules (CUSTOMIZE)
     │   ├── agents/
     │   │   ├── bmad-master.md      ← Master orchestrator
     │   │   └── active/             ← Specialist agents (CUSTOMIZE THESE)
@@ -123,7 +127,7 @@ your-project/
 
 1. **Open Claude Code** and run `/configure` — auto-detects frameworks, env vars, code style, and key files from your codebase
 2. **Review `CLAUDE.md`** — verify and adjust the detected settings
-3. **Create `ARCHITECTURE.md`** (optional) — document your target architecture
+3. **Review `ARCHITECTURE.md`** — customize the scaffolded template for your project
 4. **Start building:**
 
 ```bash
@@ -182,8 +186,13 @@ init-bmad [--name NAME] [--stack python|typescript|go|other]
           [--arch monolith|monorepo|microservices|serverless|library]
           [--backend-framework FRAMEWORK] [--frontend-framework FRAMEWORK]
           [--data-tools TOOLS] [--database DB]
+          [--full] [--upgrade] [--dry-run]
           [--gitignore | --no-gitignore]
           [--non-interactive]
+
+  --full              Scaffold complete docs/ knowledge base (design-docs, exec-plans, references)
+  --upgrade           Non-destructive upgrade for existing BMAD projects (detects and adds missing artifacts)
+  --dry-run           Show what --upgrade would do without making changes
 ```
 
 All flags are optional. In interactive mode, you'll be prompted for anything not provided via flags. In `--non-interactive` mode, sensible defaults are used (BMAD files are committed by default).
@@ -219,7 +228,7 @@ Repeat until epic is complete
 
 Each project gets customizable specialist agents that define domain expertise. During `/implement`, the relevant specialist is loaded as a persona to guide implementation with domain-specific quality gates.
 
-Available specialist stubs: `backend`, `frontend`, `data`, `qa`, `infra`. You can create custom specialists by adding `.md` files to `bmad/qf-bmad/agents/active/`.
+Available specialist stubs: `backend`, `frontend`, `data`, `qa`, `infra`. You can create custom specialists by adding `.md` files to `bmad/config/agents/active/`.
 
 ## Parallel Development with `claude-feature`
 

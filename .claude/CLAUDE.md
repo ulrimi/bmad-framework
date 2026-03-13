@@ -20,6 +20,9 @@ Always: Epic → Stories → Implement with `/implement`.
 | `/review [depth]` | Code review with auto-detected depth |
 | `/configure` | Auto-detect project settings from codebase |
 | `/simplify [path]` | Analyze and reduce code complexity |
+| `/maintain` | Repository-wide quality and consistency checks |
+| `/score [domain]` | Per-domain quality scoring and tracking |
+| `/plan <name>` | Create execution plans for complex work |
 
 ## Auto-Agent Deployment
 

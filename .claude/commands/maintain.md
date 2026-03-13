@@ -31,7 +31,7 @@ Verify `$REPO_ROOT` is correct. All subsequent paths use `$REPO_ROOT` as prefix.
 
     Optional (enhances results):
       - $REPO_ROOT/ARCHITECTURE.md
-      - $REPO_ROOT/bmad/qf-bmad/golden-principles.md
+      - $REPO_ROOT/bmad/config/golden-principles.md
       - $REPO_ROOT/docs/ (knowledge base directory)
       - $REPO_ROOT/docs/QUALITY_SCORE.md
       - $REPO_ROOT/docs/exec-plans/tech-debt-tracker.md
@@ -59,7 +59,7 @@ Agent:
   prompt: |
     Scan the codebase at $REPO_ROOT for pattern consistency issues.
 
-    If golden-principles.md exists at $REPO_ROOT/bmad/qf-bmad/golden-principles.md,
+    If golden-principles.md exists at $REPO_ROOT/bmad/config/golden-principles.md,
     read it and check the codebase against each rule.
 
     If it does not exist, check against these universal principles:

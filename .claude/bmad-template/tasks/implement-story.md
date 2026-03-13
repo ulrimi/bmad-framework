@@ -20,7 +20,7 @@ Implement a story following its specifications and specialist guidance.
 
 1. Read story file completely
 2. Identify specialist from story domain
-3. Load specialist persona from `bmad/qf-bmad/agents/active/`
+3. Load specialist persona from `bmad/config/agents/active/`
 4. Review referenced source files
 5. Check `ARCHITECTURE.md` for architectural guidance
 

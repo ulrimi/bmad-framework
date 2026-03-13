@@ -55,9 +55,9 @@ Read CLAUDE.md and all BMAD config files. Identify every `<!-- TODO: ... -->` ma
 ```
 Files to scan:
 - CLAUDE.md
-- bmad/qf-bmad/agents/active/*.md
-- bmad/qf-bmad/workflows/*.md
-- bmad/qf-bmad/core-config.yaml
+- bmad/config/agents/active/*.md
+- bmad/config/workflows/*.md
+- bmad/config/core-config.yaml
 ```
 
 For each file, record:
@@ -225,7 +225,7 @@ From directory scan and entry point detection:
 
 ### 2.6 Specialist Agent Settings
 
-For each specialist in `bmad/qf-bmad/agents/active/`:
+For each specialist in `bmad/config/agents/active/`:
 
 **Backend Specialist**: Match backend frameworks, API patterns, key backend files
 **Frontend Specialist**: Match UI frameworks, component patterns, key frontend files
@@ -320,14 +320,14 @@ For each TODO marker in CLAUDE.md:
 
 ### 4.2 Update Specialist Files
 
-For each specialist in `bmad/qf-bmad/agents/active/`:
+For each specialist in `bmad/config/agents/active/`:
 1. Read the file
 2. Find `<!-- TODO: ... -->` markers
 3. Replace with detected values using Edit tool
 
 ### 4.3 Update Workflow Files
 
-For any remaining TODOs in `bmad/qf-bmad/workflows/`:
+For any remaining TODOs in `bmad/config/workflows/`:
 1. Read each file
 2. Replace TODO markers with detected values
 
@@ -370,4 +370,4 @@ Remaining TODO markers (need manual input):
 - Prefer specific file paths over generic descriptions
 - Keep descriptions concise — one line per entry where possible
 - Follow existing CLAUDE.md formatting (markdown tables, heading levels)
-- Don't modify anything outside CLAUDE.md and bmad/qf-bmad/ directories
+- Don't modify anything outside CLAUDE.md and bmad/config/ directories

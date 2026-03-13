@@ -7,8 +7,8 @@ project:
 bmad:
   version: "1.0.0"
   epic_dir: "bmad/epics"
-  workflow_dir: "bmad/qf-bmad/workflows"
-  agent_dir: "bmad/qf-bmad/agents/active"
+  workflow_dir: "bmad/config/workflows"
+  agent_dir: "bmad/config/agents/active"
 
 commands:
   test: "{{TEST_COMMAND}}"

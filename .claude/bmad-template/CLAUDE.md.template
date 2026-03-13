@@ -13,7 +13,7 @@
 > [!IMPORTANT]
 > Always use BMAD story-driven development. Never implement directly from high-level requests.
 
-**Before work:** Read `bmad/qf-bmad/workflows/bmad-flow.md` | Create/consume stories in `bmad/epics/<epic>/stories/`
+**Before work:** Read `bmad/config/workflows/bmad-flow.md` | Create/consume stories in `bmad/epics/<epic>/stories/`
 
 **After completing any story:**
 1. Update story `Status:` → `✅ Complete`, add `**Completed**: YYYY-MM-DD`
@@ -39,6 +39,9 @@
 | `/review [depth]` | Code review with auto-detected depth |
 | `/configure` | Auto-detect project settings from codebase |
 | `/simplify [path]` | Analyze and reduce code complexity |
+| `/maintain` | Repository-wide quality and consistency checks |
+| `/score [domain]` | Per-domain quality scoring and tracking |
+| `/plan <name>` | Create execution plans for complex work |
 
 ---
 
@@ -75,7 +78,7 @@
 **Lint:** `{{LINT_COMMAND}} && {{FORMAT_CHECK_COMMAND}}`
 **Test:** `{{TEST_COMMAND}}` — mock external services, never hit real APIs.
 
-See `bmad/qf-bmad/golden-principles.md` for project taste rules and style invariants.
+See `bmad/config/golden-principles.md` for project taste rules and style invariants.
 
 ---
 
@@ -84,16 +87,16 @@ See `bmad/qf-bmad/golden-principles.md` for project taste rules and style invari
 | Doc | Path | Notes |
 |-----|------|-------|
 | Architecture | `ARCHITECTURE.md` | Codemap, invariants, boundaries |
-| Golden Principles | `bmad/qf-bmad/golden-principles.md` | Style rules and taste invariants |
-| Core Beliefs | `docs/design-docs/core-beliefs.md` | Agent-first operating principles (create with `--full`) |
-| Core Config | `bmad/qf-bmad/core-config.yaml` | Project settings and specialist list |
-| BMAD Workflow | `bmad/qf-bmad/workflows/bmad-flow.md` | Orchestration phases |
-| Specialist Agents | `bmad/qf-bmad/agents/active/` | Domain-specific agent personas |
+| Golden Principles | `bmad/config/golden-principles.md` | Style rules and taste invariants |
+| Core Beliefs | `docs/design-docs/core-beliefs.md` | Agent-first operating principles (create with `--full` or `--upgrade`) |
+| Core Config | `bmad/config/core-config.yaml` | Project settings and specialist list |
+| BMAD Workflow | `bmad/config/workflows/bmad-flow.md` | Orchestration phases |
+| Specialist Agents | `bmad/config/agents/active/` | Domain-specific agent personas |
 | Epics & Stories | `bmad/epics/` | All epics and their stories |
-| Design Docs | `docs/design-docs/` | Technical design documents (create with `--full`) |
-| Exec Plans | `docs/exec-plans/` | Execution plans for complex work (create with `--full`) |
-| Product Specs | `docs/product-specs/` | Product specifications (create with `--full`) |
-| References | `docs/references/` | LLM-friendly dependency docs (create with `--full`) |
+| Design Docs | `docs/design-docs/` | Technical design documents (create with `--full` or `--upgrade`) |
+| Exec Plans | `docs/exec-plans/` | Execution plans for complex work (create with `--full` or `--upgrade`) |
+| Product Specs | `docs/product-specs/` | Product specifications (create with `--full` or `--upgrade`) |
+| References | `docs/references/` | LLM-friendly dependency docs (create with `--full` or `--upgrade`) |
 {{KEY_FILES_TABLE}}
 
 ---

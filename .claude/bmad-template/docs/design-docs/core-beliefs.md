@@ -3,7 +3,7 @@
 > Operating principles for agent-first development in {{PROJECT_NAME}}.
 >
 > **This is NOT a code style guide.** For concrete code-level rules, see
-> `bmad/qf-bmad/golden-principles.md`. Core beliefs define HOW the team thinks
+> `bmad/config/golden-principles.md`. Core beliefs define HOW the team thinks
 > about development — the philosophy behind decisions, tradeoff frameworks, and
 > cultural norms that guide both humans and agents.
 
