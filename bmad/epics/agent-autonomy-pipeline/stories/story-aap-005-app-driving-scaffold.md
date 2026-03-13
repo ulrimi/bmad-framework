@@ -5,7 +5,8 @@ Story ID: aap-005
 Epic: agent-autonomy-pipeline
 Priority: Medium
 Estimated Effort: M
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -101,8 +102,45 @@ Section 6 of 01-harness-engineering-guide.md (Increasing Application Legibility 
 - Verify /implement Phase 6 mentions runtime_validation
 
 ## Definition of Done
-- [ ] Specialist templates updated with application_driving blocks
-- [ ] Story template updated with runtime_validation section
-- [ ] /implement Phase 6 enhanced to recognize runtime_validation
-- [ ] Graceful degradation when not configured
-- [ ] Story status updated
+- [x] Specialist templates updated with application_driving blocks
+- [x] Story template updated with runtime_validation section
+- [x] /implement Phase 6 enhanced to recognize runtime_validation
+- [x] Graceful degradation when not configured
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: 97a8b65
+
+### Files Changed
+- `.claude/bmad-template/agents/stubs/backend-specialist.md` — Added application_driving block
+- `.claude/bmad-template/agents/stubs/data-specialist.md` — Added application_driving block
+- `.claude/bmad-template/agents/stubs/frontend-specialist.md` — Added application_driving block
+- `.claude/bmad-template/agents/stubs/infra-specialist.md` — Added application_driving block
+- `.claude/bmad-template/agents/stubs/qa-specialist.md` — Added application_driving block
+- `.claude/bmad-template/templates/story-template.yaml` — Added runtime_validation section
+- `.claude/commands/implement.md` — Added Phase 6.75 (Runtime Validation)
+
+### Tests Added
+- None (template/documentation changes only — verified by manual inspection)
+
+### Simplification Results
+- Files reviewed: 7
+- Issues found: 0
+- Issues fixed: 0
+- Lines removed: 0
+- Status: No issues found
+
+### Self-Review Results
+- Findings: 0 total (0 critical/high, 0 medium, 0 nits)
+- Fixed: 0
+- Skipped: 0 nits
+
+### Multi-Agent Review Results
+- No specialist agents configured — skipped
+
+### Notes
+- All application_driving blocks are fully commented out with TODO markers, as designed for per-project customization
+- Phase 6.75 gracefully skips when no runtime_validation section exists in the story
+- Phase 6.75 falls back to core-config.yaml `app_launch` if story doesn't specify launch_command
