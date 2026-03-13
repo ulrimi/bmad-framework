@@ -5,7 +5,8 @@ Story ID: aap-003
 Epic: agent-autonomy-pipeline
 Priority: Medium
 Estimated Effort: L
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -91,9 +92,33 @@ The command can be run:
 - Verify tech-debt-tracker.md is created/updated
 
 ## Definition of Done
-- [ ] /maintain command created
-- [ ] Pattern consistency scanning works
-- [ ] Documentation freshness checking works
-- [ ] Tech debt tracker updated with findings
-- [ ] Output is actionable with severity levels
-- [ ] Story status updated
+- [x] /maintain command created
+- [x] Pattern consistency scanning works
+- [x] Documentation freshness checking works
+- [x] Tech debt tracker updated with findings
+- [x] Output is actionable with severity levels
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+
+### Files Changed
+- `.claude/commands/maintain.md` — New /maintain command with 6-step protocol
+
+### Design Decisions
+- Uses Explore subagents for parallel scanning (pattern consistency + doc freshness)
+- Integrates with /score command for quality grades (skippable with --skip-score)
+- Updates existing tech-debt-tracker.md rather than creating a separate output file
+- Offers interactive next steps including fix story generation
+
+### Simplification Results
+- Files reviewed: 7
+- Issues found: 8 (2 MEDIUM, 6 LOW)
+- Issues fixed: 2
+- Status: Completed
+
+### CodeRabbit Review Results
+- Findings: 1 total (0 critical, 1 suggestion, 0 nits)
+- All addressed: Yes
+- Re-review cycles: 1
