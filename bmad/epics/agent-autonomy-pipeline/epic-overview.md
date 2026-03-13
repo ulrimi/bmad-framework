@@ -43,7 +43,7 @@ These changes push BMAD from "disciplined agent workflow" toward "fully autonomo
 | 005 | app-driving-scaffold | Add application_driving capability blocks to specialist templates and runtime_validation to story template | M | 001 | ✅ Complete |
 | 006 | lint-scaffold | Add lints/ directory scaffold to init-bmad with per-stack starter configs and agent-friendly error messages | M | 001 | ✅ Complete |
 | 007 | context-verification | Add Phase 0.5 (context verification) and Phase 10.5 (knowledge update) to /implement lifecycle | S | None | ✅ Complete |
-| 008 | tech-debt-tracker | Create tech-debt-tracker.md template, integrate with /maintain for continuous debt management | S | 003, HEF-005 | Draft |
+| 008 | tech-debt-tracker | Create tech-debt-tracker.md template, integrate with /maintain for continuous debt management | S | 003, HEF-005 | ✅ Complete |
 
 ## Implementation Order
 1. **Stories 001, 002, 004, 007** (parallel) — Independent additions to different parts of the framework

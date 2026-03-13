@@ -216,9 +216,11 @@ _[N] issues found_ (or "No issues found ✓")
 ## Step 5: Update Tech Debt Tracker
 
 If `$REPO_ROOT/docs/exec-plans/tech-debt-tracker.md` exists:
-- Append new HIGH and MEDIUM severity findings as rows in the Active Tech Debt table
-- Use format: `| TD-[NNN] | [Area] | [Description] | [Severity] | [TODAY] | — |`
-- Do NOT duplicate items already in the tracker (match by file path + description)
+- Append new HIGH and MEDIUM severity findings as rows in the Active Items table
+- Use format: `| TD-[NNN] | [Category] | [high/medium] | [Description] | [File(s)] | [Recommended fix] | [S/M/L] | Open |`
+- Categories: Code Quality, Architecture, Documentation, Testing, Dependencies
+- Do NOT duplicate items already in the tracker (match by affected files + description)
+- Update "Last Scanned" section with today's date
 
 If the file does not exist:
 - Note: "Tech debt tracker not found. Run `init-bmad --upgrade` to add it, or create `docs/exec-plans/tech-debt-tracker.md`."
