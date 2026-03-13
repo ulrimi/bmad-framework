@@ -124,6 +124,7 @@ Run /configure to auto-detect from linter configs. -->
 | Doc | Path |
 |-----|------|
 | Architecture | `ARCHITECTURE.md` |
+| Golden Principles | `bmad/qf-bmad/golden-principles.md` |
 {{KEY_FILES_TABLE}}
 
 ---

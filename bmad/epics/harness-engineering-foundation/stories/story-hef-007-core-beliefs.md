@@ -5,7 +5,8 @@ Story ID: hef-007
 Epic: harness-engineering-foundation
 Priority: Low
 Estimated Effort: S
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -74,7 +75,25 @@ The template should include a header clarifying this distinction. Avoid duplicat
 - Verify beliefs are concrete and actionable
 
 ## Definition of Done
-- [ ] core-beliefs.md template created
-- [ ] Beliefs are agent-actionable, not aspirational
-- [ ] Scaffolded via init-bmad --full
-- [ ] Story status updated
+- [x] core-beliefs.md template created
+- [x] Beliefs are agent-actionable, not aspirational
+- [x] Scaffolded via init-bmad --full
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: 4cbccb5
+
+### Files Changed
+- `.claude/bmad-template/docs/design-docs/core-beliefs.md` — Created (7 agent-first principles, each with "Agent action" line)
+- `.claude/scripts/init-bmad` — Added --full flag and docs/ scaffold with core-beliefs copy
+
+### Simplification Results
+- Files reviewed: 2
+- Issues found: 0
+- Status: No issues found
+
+### Self-Review Results
+- Findings: 0
+- All acceptance criteria verified

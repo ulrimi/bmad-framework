@@ -34,13 +34,13 @@ These changes make every agent session more effective by reducing context-huntin
 
 | # | Story | Description | Effort | Dependencies | Status |
 |---|-------|-------------|--------|--------------|--------|
-| 001 | architecture-template | Create ARCHITECTURE.md template with matklad's pattern, integrate into init-bmad | M | None | Draft |
-| 002 | golden-principles | Create golden-principles.md template with taste invariants, add to scaffold | S | None | Draft |
+| 001 | architecture-template | Create ARCHITECTURE.md template with matklad's pattern, integrate into init-bmad | M | None | ✅ Complete |
+| 002 | golden-principles | Create golden-principles.md template with taste invariants, add to scaffold | S | None | ✅ Complete |
 | 003 | claude-md-toc | Restructure CLAUDE.md.template as table of contents (~100 lines) pointing to deeper docs | M | 001, 002, 007 | Draft |
-| 004 | living-docs | Add Progress, Surprises, Decision Log, Retrospective sections to epic template | S | None | Draft |
+| 004 | living-docs | Add Progress, Surprises, Decision Log, Retrospective sections to epic template | S | None | ✅ Complete |
 | 005 | docs-scaffold | Add docs/ directory structure to init-bmad scaffold (design-docs, exec-plans, product-specs, references, generated) | M | 001, 002 | Draft |
 | 006 | exec-plan-template | Create ExecPlan template based on Codex ExecPlans spec, add /plan command | M | 005 | Draft |
-| 007 | core-beliefs | Create core-beliefs.md template defining agent-first operating principles | S | None | Draft |
+| 007 | core-beliefs | Create core-beliefs.md template defining agent-first operating principles | S | None | ✅ Complete |
 | 008 | upgrade-command | Add `init-bmad --upgrade` for non-destructive adoption in existing projects | L | 001, 002, 004, 005, 007 | Draft |
 
 ## Implementation Order

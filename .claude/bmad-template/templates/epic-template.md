@@ -47,3 +47,41 @@
 - **Key modules affected**: [list files]
 - **New dependencies**: [packages to add]
 - **Risk areas**: [potential issues]
+
+---
+
+<!-- Living-document sections — update these as the epic progresses. -->
+
+## Progress
+
+<!-- Updated at every major milestone. Use ISO dates. -->
+
+- [ ] (YYYY-MM-DD) Epic created and stories defined
+- [ ] (YYYY-MM-DD) Story 001 complete
+<!-- Add rows as stories are completed or milestones reached. -->
+
+## Surprises & Discoveries
+
+<!-- Unexpected behaviors, performance tradeoffs, API quirks, or bugs discovered
+     during implementation. Future agent sessions will read this to avoid repeating
+     mistakes. -->
+
+_None yet._
+
+## Decision Log
+
+<!-- Every significant design decision with rationale. When an agent or engineer
+     makes a choice that wasn't obvious, record it here so future sessions
+     understand WHY. -->
+
+| Date | Decision | Rationale | Alternatives Considered |
+|------|----------|-----------|------------------------|
+| | | | |
+
+## Outcomes & Retrospective
+
+<!-- Summary at major milestones or epic completion. Compare the actual result
+     against the original Business Value statement. What worked? What would you
+     do differently? -->
+
+_To be filled at epic completion._

@@ -5,7 +5,8 @@ Story ID: hef-004
 Epic: harness-engineering-foundation
 Priority: Medium
 Estimated Effort: S
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -99,7 +100,24 @@ _To be filled at epic completion._
 - Verify `/epic` command creates epics with the new sections
 
 ## Definition of Done
-- [ ] Four living-document sections added to epic-template.md
-- [ ] Sections have clear format guidance and examples
-- [ ] Sections appear in logical order (after planning, before footer)
-- [ ] Story status updated
+- [x] Four living-document sections added to epic-template.md
+- [x] Sections have clear format guidance and examples
+- [x] Sections appear in logical order (after planning, before footer)
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: 4cbccb5
+
+### Files Changed
+- `.claude/bmad-template/templates/epic-template.md` — Added Progress, Surprises & Discoveries, Decision Log, Outcomes & Retrospective sections
+
+### Simplification Results
+- Files reviewed: 1
+- Issues found: 0
+- Status: No issues found
+
+### Self-Review Results
+- Findings: 0
+- All acceptance criteria verified
