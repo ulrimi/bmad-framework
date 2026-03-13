@@ -58,6 +58,7 @@ FRONTEND_FRAMEWORK=""
 DATA_TOOLS=""
 DATABASE=""
 GITIGNORE_BMAD=""
+FULL_SCAFFOLD=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -72,6 +73,7 @@ while [[ $# -gt 0 ]]; do
     --database)           DATABASE="$2"; shift 2 ;;
     --gitignore)          GITIGNORE_BMAD="yes"; shift ;;
     --no-gitignore)       GITIGNORE_BMAD="no"; shift ;;
+    --full)               FULL_SCAFFOLD=true; shift ;;
     --non-interactive)    NON_INTERACTIVE=true; shift ;;
     -h|--help)
       echo "Usage: ${SCRIPT_NAME} [options]"
@@ -86,6 +88,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --frontend-framework NAME   Frontend framework (e.g., react, vue, svelte)"
       echo "  --data-tools TOOLS          Data tools (e.g., pandas, sqlalchemy, spark)"
       echo "  --database DB               Database: postgres|mysql|sqlite|mongodb|none"
+      echo "  --full                      Scaffold full docs/ knowledge base (design-docs, exec-plans, etc.)"
       echo "  --gitignore                 Add BMAD files to .gitignore (for existing/corporate repos)"
       echo "  --no-gitignore              Commit BMAD files to repo (for new projects, default)"
       echo "  --non-interactive           Use defaults, no prompts"
@@ -342,6 +345,31 @@ for f in bmad/qf-bmad/checklists/*.md; do
     "${f}" && rm "${f}.bak"
 done
 
+# ─── Copy ARCHITECTURE.md to repo root ─────────────────────────────────────────
+if [[ ! -f "ARCHITECTURE.md" ]]; then
+  if [[ -f "${TEMPLATE_DIR}/templates/architecture-template.md" ]]; then
+    info "Creating ARCHITECTURE.md..."
+    cp "${TEMPLATE_DIR}/templates/architecture-template.md" ARCHITECTURE.md
+    sed -i.bak \
+      -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+      -e "s|{{PROJECT_DESCRIPTION}}|${DESCRIPTION}|g" \
+      ARCHITECTURE.md && rm ARCHITECTURE.md.bak
+    success "ARCHITECTURE.md created at repo root. Customize it for your project."
+  fi
+else
+  warn "ARCHITECTURE.md already exists — skipping."
+fi
+
+# ─── Copy golden-principles.md to bmad/qf-bmad/ ──────────────────────────────
+if [[ -f "${TEMPLATE_DIR}/templates/golden-principles.md" ]]; then
+  info "Creating golden-principles.md..."
+  cp "${TEMPLATE_DIR}/templates/golden-principles.md" bmad/qf-bmad/golden-principles.md
+  sed -i.bak \
+    -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+    bmad/qf-bmad/golden-principles.md && rm bmad/qf-bmad/golden-principles.md.bak
+  success "bmad/qf-bmad/golden-principles.md created."
+fi
+
 # Replace placeholders in task files
 for f in bmad/qf-bmad/tasks/*.md; do
   sed -i.bak \
@@ -554,6 +582,22 @@ for spec in "${SPECIALIST_LIST[@]}"; do
   echo "  - ${spec}" >> bmad/qf-bmad/core-config.yaml
 done
 
+# ─── Full docs/ scaffold (--full flag) ─────────────────────────────────────────
+if [[ "${FULL_SCAFFOLD}" == true ]]; then
+  info "Scaffolding full docs/ knowledge base..."
+  mkdir -p docs/design-docs docs/exec-plans docs/product-specs docs/references docs/generated
+
+  if [[ -f "${TEMPLATE_DIR}/docs/design-docs/core-beliefs.md" ]]; then
+    cp "${TEMPLATE_DIR}/docs/design-docs/core-beliefs.md" docs/design-docs/core-beliefs.md
+    sed -i.bak \
+      -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+      docs/design-docs/core-beliefs.md && rm docs/design-docs/core-beliefs.md.bak
+    success "docs/design-docs/core-beliefs.md created."
+  fi
+
+  success "docs/ directory scaffolded: design-docs, exec-plans, product-specs, references, generated"
+fi
+
 # ─── Generate CLAUDE.md ────────────────────────────────────────────────────────
 if [[ -f "CLAUDE.md" ]]; then
   warn "CLAUDE.md already exists — skipping generation. Edit manually or delete and re-run."
@@ -658,14 +702,16 @@ echo "  bmad/qf-bmad/tasks/         — task definitions"
 echo "  bmad/qf-bmad/templates/     — epic + story templates"
 echo "  bmad/qf-bmad/checklists/    — pre/post work checklists"
 echo "  bmad/qf-bmad/agents/        — BMAD master + specialist stubs"
+echo "  bmad/qf-bmad/golden-principles.md — code taste rules"
 echo "  bmad/epics/                 — empty, ready for first epic"
+[[ ! -f "ARCHITECTURE.md" ]] || echo "  ARCHITECTURE.md             — architecture documentation (edit this!)"
 [[ ! -f "CLAUDE.md" ]] || echo "  CLAUDE.md                   — project instructions (edit this!)"
+[[ "${FULL_SCAFFOLD}" == true ]] && echo "  docs/                       — knowledge base (design-docs, exec-plans, etc.)"
 echo ""
 echo -e "${BOLD}Next steps:${NC}"
 echo "  1. Open Claude Code:  claude"
 echo "  2. Auto-configure:    /configure"
-echo "  3. Review settings:   edit CLAUDE.md"
-echo "  4. Architecture doc:  create ARCHITECTURE.md"
-echo "  5. Start building:    /epic <your-first-feature>"
+echo "  3. Review settings:   edit CLAUDE.md and ARCHITECTURE.md"
+echo "  4. Start building:    /epic <your-first-feature>"
 echo ""
 echo -e "${CYAN}Commands available everywhere:${NC} /bmad /epic /story /implement /explore /think /review /simplify /configure"
