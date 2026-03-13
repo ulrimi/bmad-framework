@@ -41,7 +41,7 @@ These changes make every agent session more effective by reducing context-huntin
 | 005 | docs-scaffold | Add docs/ directory structure to init-bmad scaffold (design-docs, exec-plans, product-specs, references, generated) | M | 001, 002 | ✅ Complete |
 | 006 | exec-plan-template | Create ExecPlan template based on Codex ExecPlans spec, add /plan command | M | 005 | ✅ Complete |
 | 007 | core-beliefs | Create core-beliefs.md template defining agent-first operating principles | S | None | ✅ Complete |
-| 008 | upgrade-command | Add `init-bmad --upgrade` for non-destructive adoption in existing projects | L | 001, 002, 004, 005, 007 | Draft |
+| 008 | upgrade-command | Add `init-bmad --upgrade` for non-destructive adoption in existing projects | L | 001, 002, 004, 005, 007 | ✅ Complete |
 
 ## Implementation Order
 1. **Stories 001, 002, 004, 007** (parallel) — Independent templates with no dependencies

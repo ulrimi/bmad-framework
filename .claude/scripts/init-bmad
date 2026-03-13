@@ -2,6 +2,7 @@
 # init-bmad — Bootstrap BMAD story-driven development framework in a new project
 # Usage: init-bmad [--name "Project Name"] [--stack python|typescript|go|other]
 #                  [--specialists "backend,data,qa"] [--non-interactive]
+#                  [--upgrade] [--dry-run]
 # Source: ~/.claude/scripts/init-bmad
 
 set -euo pipefail
@@ -40,12 +41,6 @@ if [[ "$(pwd)" != "${REPO_ROOT}" ]]; then
   cd "${REPO_ROOT}" || error "Cannot cd to repo root"
 fi
 
-if [[ -d "bmad/qf-bmad" ]]; then
-  warn "bmad/qf-bmad already exists. Re-running will overwrite workflow/task/template files but preserve epics and agent customizations."
-  read -r -p "Continue? [y/N] " confirm
-  [[ "${confirm}" =~ ^[Yy]$ ]] || { info "Aborted."; exit 0; }
-fi
-
 # ─── Argument parsing ─────────────────────────────────────────────────────────
 PROJECT_NAME=""
 PRIMARY_STACK=""
@@ -59,6 +54,8 @@ DATA_TOOLS=""
 DATABASE=""
 GITIGNORE_BMAD=""
 FULL_SCAFFOLD=false
+UPGRADE_MODE=false
+DRY_RUN=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -74,6 +71,8 @@ while [[ $# -gt 0 ]]; do
     --gitignore)          GITIGNORE_BMAD="yes"; shift ;;
     --no-gitignore)       GITIGNORE_BMAD="no"; shift ;;
     --full)               FULL_SCAFFOLD=true; shift ;;
+    --upgrade)            UPGRADE_MODE=true; shift ;;
+    --dry-run)            DRY_RUN=true; shift ;;
     --non-interactive)    NON_INTERACTIVE=true; shift ;;
     -h|--help)
       echo "Usage: ${SCRIPT_NAME} [options]"
@@ -89,6 +88,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --data-tools TOOLS          Data tools (e.g., pandas, sqlalchemy, spark)"
       echo "  --database DB               Database: postgres|mysql|sqlite|mongodb|none"
       echo "  --full                      Scaffold full docs/ knowledge base (design-docs, exec-plans, etc.)"
+      echo "  --upgrade                   Non-destructive upgrade: detect and add missing harness artifacts"
+      echo "  --dry-run                   Show what --upgrade would do, without making changes"
       echo "  --gitignore                 Add BMAD files to .gitignore (for existing/corporate repos)"
       echo "  --no-gitignore              Commit BMAD files to repo (for new projects, default)"
       echo "  --non-interactive           Use defaults, no prompts"
@@ -97,6 +98,574 @@ while [[ $# -gt 0 ]]; do
     *) warn "Unknown option: $1"; shift ;;
   esac
 done
+
+# ─── Existing-project guard (skipped in upgrade mode) ────────────────────────
+if [[ -d "bmad/qf-bmad" ]] && [[ "${UPGRADE_MODE}" == false ]]; then
+  warn "bmad/qf-bmad already exists. Re-running will overwrite workflow/task/template files but preserve epics and agent customizations."
+  read -r -p "Continue? [y/N] " confirm
+  [[ "${confirm}" =~ ^[Yy]$ ]] || { info "Aborted."; exit 0; }
+fi
+
+# ─── Upgrade mode ────────────────────────────────────────────────────────────
+if [[ "${UPGRADE_MODE}" == true ]]; then
+  # Pre-flight: require existing BMAD setup
+  if [[ ! -f "bmad/qf-bmad/core-config.yaml" ]]; then
+    error "No existing BMAD setup detected. Use 'init-bmad' (without --upgrade) to bootstrap a new project."
+  fi
+
+  # Extract project info from existing config
+  PROJECT_NAME=$(grep -E '^\s+name:' bmad/qf-bmad/core-config.yaml | head -1 | sed 's/.*name: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
+  PROJECT_NAME="${PROJECT_NAME:-$(basename "${REPO_ROOT}")}"
+  DESCRIPTION=$(grep -E '^\s+description:' bmad/qf-bmad/core-config.yaml | head -1 | sed 's/.*description: *"\{0,1\}\([^"]*\)"\{0,1\}/\1/')
+  DESCRIPTION="${DESCRIPTION:-${PROJECT_NAME}}"
+
+  info "Scanning existing BMAD setup for ${PROJECT_NAME}..."
+
+  # ─── Detection phase ──────────────────────────────────────────────────
+  EXISTING=()
+  MISSING=()
+  MISSING_IDS=()
+
+  # Track what exists
+  if [[ -f "CLAUDE.md" ]]; then
+    _lines=$(wc -l < CLAUDE.md | tr -d ' ')
+    EXISTING+=("CLAUDE.md (${_lines} lines)")
+  fi
+  [[ -f "bmad/qf-bmad/core-config.yaml" ]] && EXISTING+=("core-config.yaml")
+
+  _agent_count=$(find bmad/qf-bmad/agents/active -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+  [[ "${_agent_count}" -gt 0 ]] && EXISTING+=("${_agent_count} specialist agents")
+
+  [[ -d "bmad/qf-bmad/workflows" ]] && EXISTING+=("Workflows")
+  [[ -d "bmad/qf-bmad/tasks" ]] && EXISTING+=("Tasks")
+  [[ -d "bmad/qf-bmad/templates" ]] && EXISTING+=("Templates")
+  [[ -d "bmad/qf-bmad/checklists" ]] && EXISTING+=("Checklists")
+
+  # ─── Check each harness engineering artifact ───────────────────────────
+
+  # 1. ARCHITECTURE.md
+  if [[ ! -f "ARCHITECTURE.md" ]]; then
+    MISSING+=("ARCHITECTURE.md — System map with codemap, invariants, boundaries")
+    MISSING_IDS+=("architecture")
+  fi
+
+  # 2. golden-principles.md
+  if [[ ! -f "bmad/qf-bmad/golden-principles.md" ]]; then
+    MISSING+=("golden-principles.md — Code taste rules for this project")
+    MISSING_IDS+=("golden-principles")
+  fi
+
+  # 3. Knowledge Map in CLAUDE.md
+  if [[ -f "CLAUDE.md" ]] && ! grep -q "## Knowledge Map" CLAUDE.md; then
+    MISSING+=("Knowledge Map in CLAUDE.md — Pointers to deeper docs")
+    MISSING_IDS+=("knowledge-map")
+  fi
+
+  # 4. docs/ directory structure
+  _docs_complete=true
+  for _d in docs/design-docs docs/exec-plans docs/product-specs docs/references docs/generated; do
+    [[ -d "${_d}" ]] || _docs_complete=false
+  done
+  if [[ "${_docs_complete}" == false ]]; then
+    MISSING+=("docs/ knowledge structure — Design docs, exec-plans, references")
+    MISSING_IDS+=("docs-scaffold")
+  fi
+
+  # 5. core-beliefs.md
+  if [[ ! -f "docs/design-docs/core-beliefs.md" ]]; then
+    _suffix=""
+    [[ ! -d "docs" ]] && _suffix=" (requires docs/)"
+    MISSING+=("core-beliefs.md — Agent-first operating principles${_suffix}")
+    MISSING_IDS+=("core-beliefs")
+  fi
+
+  # 6. QUALITY_SCORE.md
+  if [[ ! -f "docs/QUALITY_SCORE.md" ]]; then
+    _suffix=""
+    [[ ! -d "docs" ]] && _suffix=" (requires docs/)"
+    MISSING+=("QUALITY_SCORE.md — Quality scoring template${_suffix}")
+    MISSING_IDS+=("quality-score")
+  fi
+
+  # 7. structural_validation in core-config.yaml
+  if ! grep -q "structural_validation:" bmad/qf-bmad/core-config.yaml; then
+    MISSING+=("structural_validation in core-config.yaml — Mechanical enforcement hooks")
+    MISSING_IDS+=("structural-validation")
+  fi
+
+  # 8. tech-debt-tracker.md
+  if [[ ! -f "docs/exec-plans/tech-debt-tracker.md" ]]; then
+    _suffix=""
+    [[ ! -d "docs" ]] && _suffix=" (requires docs/)"
+    MISSING+=("tech-debt-tracker.md — Tech debt tracking${_suffix}")
+    MISSING_IDS+=("tech-debt-tracker")
+  fi
+
+  # 9. Living-document sections in epic template
+  if [[ -f "bmad/qf-bmad/templates/epic-template.md" ]]; then
+    _missing_sections=0
+    grep -q "## Progress" bmad/qf-bmad/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
+    grep -q "## Surprises" bmad/qf-bmad/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
+    grep -q "## Decision Log" bmad/qf-bmad/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
+    grep -q "## Outcomes" bmad/qf-bmad/templates/epic-template.md || _missing_sections=$((_missing_sections + 1))
+    if [[ ${_missing_sections} -gt 0 ]]; then
+      MISSING+=("Living-document sections in epic template — Progress, Surprises, Decision Log, Retrospective")
+      MISSING_IDS+=("living-docs")
+    fi
+  fi
+
+  # ─── Display report ────────────────────────────────────────────────────
+  echo ""
+  echo -e "${CYAN}${BOLD}╔══════════════════════════════════════════╗${NC}"
+  echo -e "${CYAN}${BOLD}║       BMAD Upgrade — Gap Analysis        ║${NC}"
+  echo -e "${CYAN}${BOLD}╚══════════════════════════════════════════╝${NC}"
+  echo ""
+
+  echo -e "${BOLD}Existing setup detected:${NC}"
+  for item in ${EXISTING[@]+"${EXISTING[@]}"}; do
+    echo -e "  ${GREEN}✓${NC} ${item}"
+  done
+  echo ""
+
+  if [[ ${#MISSING[@]} -eq 0 ]]; then
+    success "All harness engineering artifacts are present. Nothing to upgrade!"
+    exit 0
+  fi
+
+  echo -e "${BOLD}Missing harness engineering artifacts:${NC}"
+  for i in "${!MISSING[@]}"; do
+    echo -e "  ${YELLOW}[$((i + 1))]${NC} ${MISSING[$i]}"
+  done
+  echo ""
+
+  # ─── Dry-run display helper ──────────────────────────────────────────
+  _show_dry_run() {
+    echo -e "${BOLD}Dry run — no changes will be made.${NC}"
+    echo ""
+    echo "Would create/modify:"
+    for i in "${!MISSING_IDS[@]}"; do
+      case "${MISSING_IDS[$i]}" in
+        architecture)           echo "  CREATE  ARCHITECTURE.md" ;;
+        golden-principles)      echo "  CREATE  bmad/qf-bmad/golden-principles.md" ;;
+        knowledge-map)          echo "  MODIFY  CLAUDE.md (insert ## Knowledge Map section)" ;;
+        docs-scaffold)          echo "  CREATE  docs/ directory structure" ;;
+        core-beliefs)           echo "  CREATE  docs/design-docs/core-beliefs.md" ;;
+        quality-score)          echo "  CREATE  docs/QUALITY_SCORE.md" ;;
+        structural-validation)  echo "  MODIFY  bmad/qf-bmad/core-config.yaml (append structural_validation)" ;;
+        tech-debt-tracker)      echo "  CREATE  docs/exec-plans/tech-debt-tracker.md" ;;
+        living-docs)            echo "  MODIFY  bmad/qf-bmad/templates/epic-template.md (append sections)" ;;
+      esac
+    done
+    echo ""
+    info "Run 'init-bmad --upgrade' (without --dry-run) to apply changes."
+  }
+
+  # ─── If --dry-run, show and exit ───────────────────────────────────────
+  if [[ "${DRY_RUN}" == true ]]; then
+    _show_dry_run
+    exit 0
+  fi
+
+  # ─── Interactive selection ─────────────────────────────────────────────
+  SELECTED_IDS=()
+
+  if [[ "${NON_INTERACTIVE}" == true ]]; then
+    SELECTED_IDS=("${MISSING_IDS[@]}")
+  else
+    echo -e "${BOLD}Options:${NC}"
+    echo "  a) Apply all    s) Select individually    d) Dry-run    q) Quit"
+    echo ""
+    prompt "Choice? [a]"
+    read -r choice
+
+    case "${choice}" in
+      q|Q) info "Aborted."; exit 0 ;;
+      d|D) _show_dry_run; exit 0 ;;
+      s|S)
+        echo ""
+        for i in "${!MISSING[@]}"; do
+          prompt "Add [$((i + 1))] ${MISSING[$i]}? [Y/n]"
+          read -r yn
+          if [[ ! "${yn}" =~ ^[Nn]$ ]]; then
+            SELECTED_IDS+=("${MISSING_IDS[$i]}")
+          fi
+        done
+        ;;
+      *)
+        SELECTED_IDS=("${MISSING_IDS[@]}")
+        ;;
+    esac
+  fi
+
+  if [[ ${#SELECTED_IDS[@]} -eq 0 ]]; then
+    info "No artifacts selected. Nothing to do."
+    exit 0
+  fi
+
+  # ─── Apply upgrades ───────────────────────────────────────────────────
+  CREATED_FILES=()
+  CREATED_DESCS=()
+  MODIFIED_DESCS=()
+
+  # Helper: create backup without overwriting previous backups
+  _safe_backup() {
+    local _src="$1"
+    local _bak="${_src}.upgrade-backup"
+    if [[ -f "${_bak}" ]]; then
+      _bak="${_src}.upgrade-backup.$(date +%Y%m%d%H%M%S)"
+      warn "Existing backup found, saving to ${_bak}"
+    fi
+    cp "${_src}" "${_bak}"
+    echo "${_bak}"
+  }
+
+  # Helper: check if ID is in selected list
+  _selected() {
+    local _id="$1"
+    for _s in ${SELECTED_IDS[@]+"${SELECTED_IDS[@]}"}; do
+      [[ "${_s}" == "${_id}" ]] && return 0
+    done
+    return 1
+  }
+
+  # Handle docs/ dependency for docs-layer artifacts (AC7)
+  _needs_docs=false
+  for _dep_id in core-beliefs quality-score tech-debt-tracker; do
+    if _selected "${_dep_id}" && [[ ! -d "docs" ]]; then
+      _needs_docs=true
+      break
+    fi
+  done
+
+  if [[ "${_needs_docs}" == true ]] && ! _selected "docs-scaffold"; then
+    warn "Selected artifacts require docs/ directory structure."
+    if [[ "${NON_INTERACTIVE}" == true ]]; then
+      SELECTED_IDS+=("docs-scaffold")
+    else
+      prompt "Create docs/ structure first? [Y/n]"
+      read -r yn
+      if [[ ! "${yn}" =~ ^[Nn]$ ]]; then
+        SELECTED_IDS+=("docs-scaffold")
+      else
+        warn "Skipping docs-dependent artifacts (core-beliefs, QUALITY_SCORE, tech-debt-tracker)."
+      fi
+    fi
+  fi
+
+  # ── Apply: docs scaffold (must run first — others depend on it) ──────
+  if _selected "docs-scaffold"; then
+    info "Creating docs/ knowledge structure..."
+    mkdir -p docs/design-docs docs/exec-plans/active docs/exec-plans/completed \
+             docs/product-specs docs/references docs/generated
+
+    for _tpl in docs/design-docs/index.md docs/product-specs/index.md docs/references/README.md; do
+      if [[ -f "${TEMPLATE_DIR}/${_tpl}" ]] && [[ ! -f "${_tpl}" ]]; then
+        cp "${TEMPLATE_DIR}/${_tpl}" "${_tpl}"
+        sed -i.bak -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" "${_tpl}" && rm "${_tpl}.bak"
+        CREATED_FILES+=("${_tpl}")
+      fi
+    done
+
+    [[ -f "docs/generated/.gitkeep" ]] || touch docs/generated/.gitkeep
+    CREATED_DESCS+=("docs/ directory structure (design-docs, exec-plans, product-specs, references, generated)")
+    success "docs/ directory structure created."
+  fi
+
+  # ── Apply: ARCHITECTURE.md ──────────────────────────────────────────
+  if _selected "architecture"; then
+    if [[ -f "${TEMPLATE_DIR}/templates/architecture-template.md" ]]; then
+      info "Creating ARCHITECTURE.md..."
+      cp "${TEMPLATE_DIR}/templates/architecture-template.md" ARCHITECTURE.md
+      sed -i.bak \
+        -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+        -e "s|{{PROJECT_DESCRIPTION}}|${DESCRIPTION}|g" \
+        ARCHITECTURE.md && rm ARCHITECTURE.md.bak
+      CREATED_FILES+=("ARCHITECTURE.md")
+      CREATED_DESCS+=("ARCHITECTURE.md")
+      success "ARCHITECTURE.md created."
+    else
+      warn "architecture-template.md not found in templates — skipping."
+    fi
+  fi
+
+  # ── Apply: golden-principles.md ─────────────────────────────────────
+  if _selected "golden-principles"; then
+    if [[ -f "${TEMPLATE_DIR}/templates/golden-principles.md" ]]; then
+      info "Creating golden-principles.md..."
+      cp "${TEMPLATE_DIR}/templates/golden-principles.md" bmad/qf-bmad/golden-principles.md
+      sed -i.bak -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+        bmad/qf-bmad/golden-principles.md && rm bmad/qf-bmad/golden-principles.md.bak
+      CREATED_FILES+=("bmad/qf-bmad/golden-principles.md")
+      CREATED_DESCS+=("bmad/qf-bmad/golden-principles.md")
+      success "golden-principles.md created."
+    else
+      warn "golden-principles.md template not found — skipping."
+    fi
+  fi
+
+  # ── Apply: Knowledge Map in CLAUDE.md (AC5) ─────────────────────────
+  if _selected "knowledge-map"; then
+    if [[ -f "CLAUDE.md" ]]; then
+      info "Inserting Knowledge Map into CLAUDE.md..."
+      _claude_backup=$(_safe_backup CLAUDE.md)
+
+      # Build Knowledge Map dynamically based on what actually exists
+      _km_lines=()
+      _km_lines+=("## Knowledge Map")
+      _km_lines+=("")
+      _km_lines+=("| Doc | Path | Purpose |")
+      _km_lines+=("|-----|------|---------|")
+      [[ -f "ARCHITECTURE.md" ]] && \
+        _km_lines+=("| Architecture | \`ARCHITECTURE.md\` | Codemap, invariants, boundaries |")
+      [[ -f "bmad/qf-bmad/golden-principles.md" ]] && \
+        _km_lines+=("| Golden Principles | \`bmad/qf-bmad/golden-principles.md\` | Style rules and taste invariants |")
+      [[ -f "bmad/qf-bmad/core-config.yaml" ]] && \
+        _km_lines+=("| Core Config | \`bmad/qf-bmad/core-config.yaml\` | Project settings and specialist list |")
+      [[ -d "bmad/qf-bmad/workflows" ]] && \
+        _km_lines+=("| BMAD Workflow | \`bmad/qf-bmad/workflows/bmad-flow.md\` | Orchestration phases |")
+      [[ -d "bmad/qf-bmad/agents/active" ]] && \
+        _km_lines+=("| Specialist Agents | \`bmad/qf-bmad/agents/active/\` | Domain-specific agent personas |")
+      [[ -d "bmad/epics" ]] && \
+        _km_lines+=("| Epics & Stories | \`bmad/epics/\` | All epics and their stories |")
+      [[ -d "docs/design-docs" ]] && \
+        _km_lines+=("| Design Docs | \`docs/design-docs/\` | Technical design documents |")
+      [[ -f "docs/design-docs/core-beliefs.md" ]] && \
+        _km_lines+=("| Core Beliefs | \`docs/design-docs/core-beliefs.md\` | Agent-first operating principles |")
+      [[ -d "docs/exec-plans" ]] && \
+        _km_lines+=("| Exec Plans | \`docs/exec-plans/\` | Execution plans for complex work |")
+      [[ -d "docs/product-specs" ]] && \
+        _km_lines+=("| Product Specs | \`docs/product-specs/\` | Product specifications |")
+      [[ -d "docs/references" ]] && \
+        _km_lines+=("| References | \`docs/references/\` | LLM-friendly dependency docs |")
+      [[ -f "docs/QUALITY_SCORE.md" ]] && \
+        _km_lines+=("| Quality Score | \`docs/QUALITY_SCORE.md\` | Quality scoring template |")
+
+      # Write Knowledge Map to temp file
+      _km_tmp=$(mktemp)
+      printf '%s\n' "${_km_lines[@]}" > "${_km_tmp}"
+
+      # Insert before the first ## heading using Python for reliability
+      python3 -c "
+import sys
+km = open(sys.argv[1]).read()
+content = open('CLAUDE.md').read()
+lines = content.split('\n')
+insert_idx = len(lines)
+for i, line in enumerate(lines):
+    if line.startswith('## '):
+        insert_idx = i
+        break
+lines.insert(insert_idx, '')
+lines.insert(insert_idx, km.rstrip())
+lines.insert(insert_idx, '')
+open('CLAUDE.md', 'w').write('\n'.join(lines))
+" "${_km_tmp}"
+
+      rm -f "${_km_tmp}"
+      MODIFIED_DESCS+=("CLAUDE.md (Knowledge Map inserted)")
+      success "Knowledge Map inserted into CLAUDE.md. Backup at ${_claude_backup}."
+    else
+      warn "CLAUDE.md not found — skipping Knowledge Map."
+    fi
+  fi
+
+  # ── Apply: core-beliefs.md ──────────────────────────────────────────
+  if _selected "core-beliefs"; then
+    if [[ -d "docs/design-docs" ]] && [[ -f "${TEMPLATE_DIR}/docs/design-docs/core-beliefs.md" ]]; then
+      info "Creating core-beliefs.md..."
+      cp "${TEMPLATE_DIR}/docs/design-docs/core-beliefs.md" docs/design-docs/core-beliefs.md
+      sed -i.bak -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+        docs/design-docs/core-beliefs.md && rm docs/design-docs/core-beliefs.md.bak
+      CREATED_FILES+=("docs/design-docs/core-beliefs.md")
+      CREATED_DESCS+=("docs/design-docs/core-beliefs.md")
+      success "core-beliefs.md created."
+    else
+      [[ ! -d "docs/design-docs" ]] && warn "docs/design-docs/ does not exist — skipping core-beliefs.md."
+    fi
+  fi
+
+  # ── Apply: QUALITY_SCORE.md ─────────────────────────────────────────
+  if _selected "quality-score"; then
+    if [[ -d "docs" ]] && [[ -f "${TEMPLATE_DIR}/docs/QUALITY_SCORE.md" ]]; then
+      info "Creating QUALITY_SCORE.md..."
+      cp "${TEMPLATE_DIR}/docs/QUALITY_SCORE.md" docs/QUALITY_SCORE.md
+      sed -i.bak -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+        docs/QUALITY_SCORE.md && rm docs/QUALITY_SCORE.md.bak
+      CREATED_FILES+=("docs/QUALITY_SCORE.md")
+      CREATED_DESCS+=("docs/QUALITY_SCORE.md")
+      success "QUALITY_SCORE.md created."
+    else
+      [[ ! -d "docs" ]] && warn "docs/ does not exist — skipping QUALITY_SCORE.md."
+    fi
+  fi
+
+  # ── Apply: structural_validation in core-config.yaml (AC6) ──────────
+  if _selected "structural-validation"; then
+    info "Appending structural_validation to core-config.yaml..."
+    _config_backup=$(_safe_backup bmad/qf-bmad/core-config.yaml)
+    cat >> bmad/qf-bmad/core-config.yaml << 'STRUCT_EOF'
+
+structural_validation:
+  enabled: false
+  rules:
+    - name: story_status_sync
+      description: "Story status must match code state before marking complete"
+    - name: architecture_coverage
+      description: "All modules referenced in ARCHITECTURE.md"
+    - name: golden_principles_compliance
+      description: "Code adheres to golden-principles.md rules"
+STRUCT_EOF
+    MODIFIED_DESCS+=("bmad/qf-bmad/core-config.yaml (structural_validation appended)")
+    success "structural_validation added to core-config.yaml. Backup at ${_config_backup}."
+  fi
+
+  # ── Apply: tech-debt-tracker.md ─────────────────────────────────────
+  if _selected "tech-debt-tracker"; then
+    if [[ -d "docs/exec-plans" ]] && [[ -f "${TEMPLATE_DIR}/docs/exec-plans/tech-debt-tracker.md" ]]; then
+      info "Creating tech-debt-tracker.md..."
+      cp "${TEMPLATE_DIR}/docs/exec-plans/tech-debt-tracker.md" docs/exec-plans/tech-debt-tracker.md
+      sed -i.bak -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+        docs/exec-plans/tech-debt-tracker.md && rm docs/exec-plans/tech-debt-tracker.md.bak
+      CREATED_FILES+=("docs/exec-plans/tech-debt-tracker.md")
+      CREATED_DESCS+=("docs/exec-plans/tech-debt-tracker.md")
+      success "tech-debt-tracker.md created."
+    else
+      [[ ! -d "docs/exec-plans" ]] && warn "docs/exec-plans/ does not exist — skipping tech-debt-tracker.md."
+    fi
+  fi
+
+  # ── Apply: Living-document sections in epic template ─────────────────
+  if _selected "living-docs"; then
+    if [[ -f "bmad/qf-bmad/templates/epic-template.md" ]]; then
+      info "Adding living-document sections to epic template..."
+      _epic_backup=$(_safe_backup bmad/qf-bmad/templates/epic-template.md)
+
+      _appended=false
+
+      if ! grep -q "## Progress" bmad/qf-bmad/templates/epic-template.md; then
+        cat >> bmad/qf-bmad/templates/epic-template.md << 'LIVING_PROGRESS'
+
+---
+
+<!-- Living-document sections — update these as the epic progresses. -->
+
+## Progress
+
+<!-- Updated at every major milestone. Use ISO dates. -->
+
+- [ ] (YYYY-MM-DD) Epic created and stories defined
+- [ ] (YYYY-MM-DD) Story 001 complete
+<!-- Add rows as stories are completed or milestones reached. -->
+LIVING_PROGRESS
+        _appended=true
+      fi
+
+      if ! grep -q "## Surprises" bmad/qf-bmad/templates/epic-template.md; then
+        cat >> bmad/qf-bmad/templates/epic-template.md << 'LIVING_SURPRISES'
+
+## Surprises & Discoveries
+
+<!-- Unexpected behaviors, performance tradeoffs, API quirks, or bugs discovered
+     during implementation. Future agent sessions will read this to avoid repeating
+     mistakes. -->
+
+_None yet._
+LIVING_SURPRISES
+        _appended=true
+      fi
+
+      if ! grep -q "## Decision Log" bmad/qf-bmad/templates/epic-template.md; then
+        cat >> bmad/qf-bmad/templates/epic-template.md << 'LIVING_DECISIONS'
+
+## Decision Log
+
+<!-- Every significant design decision with rationale. When an agent or engineer
+     makes a choice that wasn't obvious, record it here so future sessions
+     understand WHY. -->
+
+| Date | Decision | Rationale | Alternatives Considered |
+|------|----------|-----------|------------------------|
+| | | | |
+LIVING_DECISIONS
+        _appended=true
+      fi
+
+      if ! grep -q "## Outcomes" bmad/qf-bmad/templates/epic-template.md; then
+        cat >> bmad/qf-bmad/templates/epic-template.md << 'LIVING_OUTCOMES'
+
+## Outcomes & Retrospective
+
+<!-- Summary at major milestones or epic completion. Compare the actual result
+     against the original Business Value statement. What worked? What would you
+     do differently? -->
+
+_To be filled at epic completion._
+LIVING_OUTCOMES
+        _appended=true
+      fi
+
+      if [[ "${_appended}" == true ]]; then
+        MODIFIED_DESCS+=("bmad/qf-bmad/templates/epic-template.md (living-document sections appended)")
+        success "Living-document sections added to epic template."
+      else
+        rm -f "${_epic_backup}"
+      fi
+    fi
+  fi
+
+  # ─── Placeholder sweep on newly created files ─────────────────────────
+  for _f in ${CREATED_FILES[@]+"${CREATED_FILES[@]}"}; do
+    if [[ -f "${_f}" ]] && grep -qE '\{\{[A-Z0-9_]+\}\}' "${_f}" 2>/dev/null; then
+      sed -i.bak -E 's/\{\{([A-Z0-9_]+)\}\}/<!-- TODO: Fill in \1. Run \/configure to auto-detect. -->/g' "${_f}" && rm -f "${_f}.bak"
+    fi
+  done
+
+  # ─── Summary ──────────────────────────────────────────────────────────
+  echo ""
+  echo -e "${GREEN}${BOLD}╔══════════════════════════════════════════╗${NC}"
+  echo -e "${GREEN}${BOLD}║         BMAD Upgrade Complete             ║${NC}"
+  echo -e "${GREEN}${BOLD}╚══════════════════════════════════════════╝${NC}"
+  echo ""
+
+  if [[ ${#CREATED_DESCS[@]} -gt 0 ]]; then
+    echo -e "${BOLD}Files created:${NC}"
+    for item in ${CREATED_DESCS[@]+"${CREATED_DESCS[@]}"}; do
+      echo -e "  ${GREEN}+${NC} ${item}"
+    done
+    echo ""
+  fi
+
+  if [[ ${#MODIFIED_DESCS[@]} -gt 0 ]]; then
+    echo -e "${BOLD}Files modified:${NC}"
+    for item in ${MODIFIED_DESCS[@]+"${MODIFIED_DESCS[@]}"}; do
+      echo -e "  ${YELLOW}~${NC} ${item}"
+    done
+    echo ""
+  fi
+
+  echo -e "${BOLD}Recommended next steps:${NC}"
+  for item in ${CREATED_DESCS[@]+"${CREATED_DESCS[@]}"}; do
+    case "${item}" in
+      ARCHITECTURE*) echo "  • Edit ARCHITECTURE.md to describe your system's structure" ;;
+      *golden-principles*) echo "  • Customize golden-principles.md for your project's taste" ;;
+      *core-beliefs*) echo "  • Review core-beliefs.md and adjust operating principles" ;;
+      *QUALITY_SCORE*) echo "  • Set initial quality scores in QUALITY_SCORE.md" ;;
+      *tech-debt*) echo "  • Log known tech debt in tech-debt-tracker.md" ;;
+      "docs/ directory"*) echo "  • Populate docs/ with design documents and references" ;;
+    esac
+  done
+  for item in ${MODIFIED_DESCS[@]+"${MODIFIED_DESCS[@]}"}; do
+    case "${item}" in
+      *Knowledge*) echo "  • Review Knowledge Map in CLAUDE.md and add project-specific entries" ;;
+      *structural*) echo "  • Enable structural_validation rules in core-config.yaml when ready" ;;
+      *living*) echo "  • Use living-document sections in future epics" ;;
+    esac
+  done
+  echo "  • Run /configure to auto-detect remaining settings"
+  echo ""
+
+  exit 0
+fi
 
 # ─── Interactive prompts ───────────────────────────────────────────────────────
 DEFAULT_NAME="$(basename "${REPO_ROOT}")"
