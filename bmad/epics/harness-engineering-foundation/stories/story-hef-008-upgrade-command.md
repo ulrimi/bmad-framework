@@ -5,7 +5,8 @@ Story ID: hef-008
 Epic: harness-engineering-foundation
 Priority: High
 Estimated Effort: L
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -188,14 +189,44 @@ PROJECT_LANG=$(grep "language:" bmad/qf-bmad/core-config.yaml | ...)
 - Run `init-bmad --upgrade` twice — verify idempotent (second run reports nothing missing)
 
 ## Definition of Done
-- [ ] `--upgrade` flag added to init-bmad
-- [ ] `--dry-run` flag added to init-bmad
-- [ ] Detection identifies all harness engineering artifacts
-- [ ] Interactive menu with apply-all/select/dry-run/quit options
-- [ ] Non-destructive: no existing files overwritten
-- [ ] CLAUDE.md Knowledge Map inserted without modifying existing content
-- [ ] core-config.yaml augmented without modifying existing config
-- [ ] Summary printed with next steps
-- [ ] Idempotent: running twice produces no changes on second run
-- [ ] Refuses non-BMAD directories with helpful message
-- [ ] Story status updated
+- [x] `--upgrade` flag added to init-bmad
+- [x] `--dry-run` flag added to init-bmad
+- [x] Detection identifies all harness engineering artifacts
+- [x] Interactive menu with apply-all/select/dry-run/quit options
+- [x] Non-destructive: no existing files overwritten
+- [x] CLAUDE.md Knowledge Map inserted without modifying existing content
+- [x] core-config.yaml augmented without modifying existing config
+- [x] Summary printed with next steps
+- [x] Idempotent: running twice produces no changes on second run
+- [x] Refuses non-BMAD directories with helpful message
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: d663494
+
+### Files Changed
+- `.claude/scripts/init-bmad` — Added --upgrade and --dry-run flags, detection logic for 9 artifact types, interactive selection menu, non-destructive upgrade application with safe backups, and completion summary
+
+### Tests Added
+- Manual testing: --help, --upgrade on non-BMAD dir (AC10), --upgrade --dry-run (AC9), --upgrade --non-interactive full apply (AC1-AC8), idempotency (second run)
+
+### Simplification Results
+- Files reviewed: 1
+- Issues found: 0
+- Issues fixed: 0
+- Lines removed: 0
+- Status: No issues found
+
+### CodeRabbit Review Results
+- Findings: 2 total (0 critical, 2 suggestions, 0 nits)
+- All addressed: Yes
+- Re-review cycles: 1 (clean on second pass)
+- Remaining items: None
+
+### Notes
+- Safe backup naming with timestamp suffix prevents overwriting previous backups on repeated runs
+- All array iterations use `${arr[@]+"${arr[@]}"}` pattern for bash 3.2 compatibility with `set -u`
+- Knowledge Map is dynamically built based on what actually exists in the project
+- Template files that don't exist in `~/.claude/bmad-template/` are gracefully skipped with warnings
