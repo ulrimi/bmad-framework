@@ -585,14 +585,30 @@ done
 # ─── Full docs/ scaffold (--full flag) ─────────────────────────────────────────
 if [[ "${FULL_SCAFFOLD}" == true ]]; then
   info "Scaffolding full docs/ knowledge base..."
-  mkdir -p docs/design-docs docs/exec-plans docs/product-specs docs/references docs/generated
+  mkdir -p docs/design-docs docs/exec-plans/active docs/exec-plans/completed \
+           docs/product-specs docs/references docs/generated
 
-  if [[ -f "${TEMPLATE_DIR}/docs/design-docs/core-beliefs.md" ]]; then
-    cp "${TEMPLATE_DIR}/docs/design-docs/core-beliefs.md" docs/design-docs/core-beliefs.md
-    sed -i.bak \
-      -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
-      docs/design-docs/core-beliefs.md && rm docs/design-docs/core-beliefs.md.bak
-    success "docs/design-docs/core-beliefs.md created."
+  # Copy and customize template files
+  _docs_templates=(
+    "docs/design-docs/core-beliefs.md"
+    "docs/design-docs/index.md"
+    "docs/product-specs/index.md"
+    "docs/references/README.md"
+    "docs/exec-plans/tech-debt-tracker.md"
+    "docs/QUALITY_SCORE.md"
+  )
+  for _tpl in "${_docs_templates[@]}"; do
+    if [[ -f "${TEMPLATE_DIR}/${_tpl}" ]]; then
+      cp "${TEMPLATE_DIR}/${_tpl}" "${_tpl}"
+      sed -i.bak -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" "${_tpl}" && rm "${_tpl}.bak"
+    fi
+  done
+
+  # Ensure generated/ dir is tracked even when empty
+  if [[ -f "${TEMPLATE_DIR}/docs/generated/.gitkeep" ]]; then
+    cp "${TEMPLATE_DIR}/docs/generated/.gitkeep" docs/generated/.gitkeep
+  else
+    touch docs/generated/.gitkeep
   fi
 
   success "docs/ directory scaffolded: design-docs, exec-plans, product-specs, references, generated"

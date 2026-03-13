@@ -5,7 +5,8 @@ Story ID: hef-005
 Epic: harness-engineering-foundation
 Priority: Medium
 Estimated Effort: M
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -96,8 +97,37 @@ A structured docs/ directory with indexes makes the repository self-documenting.
 - Verify index files have useful content
 
 ## Definition of Done
-- [ ] --full flag added to init-bmad
-- [ ] docs/ directory structure created with index templates
-- [ ] References README explains purpose
-- [ ] Default behavior (no --full) unchanged
-- [ ] Story status updated
+- [x] --full flag added to init-bmad
+- [x] docs/ directory structure created with index templates
+- [x] References README explains purpose
+- [x] Default behavior (no --full) unchanged
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: 6ad9727
+
+### Files Created
+- `.claude/bmad-template/docs/design-docs/index.md` — Index template with guidance
+- `.claude/bmad-template/docs/product-specs/index.md` — Index template
+- `.claude/bmad-template/docs/references/README.md` — Purpose and usage explanation
+- `.claude/bmad-template/docs/exec-plans/tech-debt-tracker.md` — Tech debt tracker
+- `.claude/bmad-template/docs/generated/.gitkeep` — Keep empty dir in git
+- `.claude/bmad-template/docs/QUALITY_SCORE.md` — Quality score template
+
+### Files Modified
+- `.claude/scripts/init-bmad` — Added exec-plans/active+completed subdirs, loop-based template copying
+
+### Simplification Results
+- Files reviewed: 8
+- Issues found: 0
+- Issues fixed: 0
+- Lines removed: 0
+- Status: No issues found
+
+### CodeRabbit Review Results
+- Findings: 2 total (0 critical, 1 suggestion, 1 nit)
+- All addressed: Yes
+- Re-review cycles: 1
+- Remaining items: None

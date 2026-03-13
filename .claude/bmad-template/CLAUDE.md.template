@@ -2,11 +2,9 @@
 
 {{PROJECT_DESCRIPTION}}
 
-## Project Architecture
+## Architecture
 
-See `ARCHITECTURE.md` for the full design plan. Key summary:
-
-{{ARCHITECTURE_SUMMARY}}
+{{ARCHITECTURE_SUMMARY}} See `ARCHITECTURE.md` for codemap, invariants, and boundaries.
 
 ---
 
@@ -15,40 +13,32 @@ See `ARCHITECTURE.md` for the full design plan. Key summary:
 > [!IMPORTANT]
 > Always use BMAD story-driven development. Never implement directly from high-level requests.
 
-**Before starting any work:**
+**Before work:** Read `bmad/qf-bmad/workflows/bmad-flow.md` | Create/consume stories in `bmad/epics/<epic>/stories/`
 
-1. Read `bmad/qf-bmad/workflows/bmad-flow.md` for orchestration phases
-2. Create/consume stories in `bmad/epics/<epic>/stories/`
-3. Attach deliverables and handoff notes to each story
-4. Run QA validation before marking complete
+**After completing any story:**
+1. Update story `Status:` → `✅ Complete`, add `**Completed**: YYYY-MM-DD`
+2. Mark Definition of Done checkboxes `[x]`, add Completion Notes
+3. Update epic overview status table
 
-**After completing any story (MANDATORY):**
-
-1. Update story file `Status:` field to `✅ Complete` (or `⚠️ Partial`)
-2. Add `**Completed**: YYYY-MM-DD` to story header
-3. Mark Definition of Done checkboxes as `[x]`
-4. Add Completion Notes section with implementation details
-5. Update epic overview status table
-
-> ⚠️ Work is NOT complete until story status is synchronized with code state.
+> Work is NOT complete until story status is synchronized with code state.
 
 ---
 
-## BMAD Quick Commands
+## Quick Commands
 
-| Command | Compute Level | Purpose |
-|---------|---------------|---------|
-| `/bmad <topic>` | Maximum | Full 5-phase orchestration with parallel agents |
-| `/epic <name>` | Medium | Create new epic with context gathering |
-| `/refine <epic>` | Targeted | Gap analysis on existing epic |
-| `/story <path>` | Focused | Create or implement a story |
-| `/feature <name>` | Setup | Create isolated worktree, switch Claude to work in it |
-| `/implement <path>` | Execution | Full implementation of epic or stories until complete |
-| `/think <question>` | Deep | Sequential reasoning without BMAD structure |
-| `/explore <topic>` | Research | Max-compute codebase exploration |
-| `/review [depth]` | Validation | Code review with auto-detected or specified depth |
-| `/configure` | Setup | Auto-detect project settings from codebase |
-| `/simplify [path]` | Cleanup | Analyze and reduce code complexity |
+| Command | Purpose |
+|---------|---------|
+| `/bmad <topic>` | Full 5-phase orchestration with parallel agents |
+| `/epic <name>` | Create new epic with context gathering |
+| `/refine <epic>` | Gap analysis on existing epic |
+| `/story <path>` | Create or implement a story |
+| `/feature <name>` | Create isolated worktree for parallel work |
+| `/implement <path>` | Full implementation of epic or stories |
+| `/think <question>` | Sequential reasoning without BMAD structure |
+| `/explore <topic>` | Max-compute codebase exploration |
+| `/review [depth]` | Code review with auto-detected depth |
+| `/configure` | Auto-detect project settings from codebase |
+| `/simplify [path]` | Analyze and reduce code complexity |
 
 ---
 
@@ -57,47 +47,6 @@ See `ARCHITECTURE.md` for the full design plan. Key summary:
 | Layer | Technologies |
 |-------|-------------|
 {{TECH_STACK_TABLE}}
-
----
-
-## Code Style Mandates
-
-<!-- TODO: Define your code style rules. Example:
-- Use type hints on all function signatures
-- Google-style docstrings on public functions
-- Max line length: 120 characters
-- Prefer composition over inheritance
-Run /configure to auto-detect from linter configs. -->
-
-### Linting & Formatting (MANDATORY)
-
-**Pre-commit workflow — run before every commit:**
-
-```bash
-{{LINT_COMMAND}} && {{FORMAT_CHECK_COMMAND}}
-```
-
----
-
-## Testing Standards
-
-- Use `{{TEST_FRAMEWORK}}` for all tests
-- Mock external services in unit tests — never hit real APIs
-- Test pure logic functions against synthetic data
-
-**Running tests:**
-```bash
-{{TEST_COMMAND}}              # full suite
-{{TEST_COMMAND}} -x           # stop on first fail
-```
-
----
-
-## Security & Best Practices
-
-1. **No Secrets in Code**: Never hardcode API keys or credentials — use environment variables.
-2. **Input Validation**: Validate all user inputs before passing to core logic.
-3. **No SQL injection**: Use ORM parameters, never string formatting for queries.
 
 ---
 
@@ -110,34 +59,42 @@ Run /configure to auto-detect from linter configs. -->
 # Run app
 {{APP_LAUNCH_COMMAND}}
 
-# Linting
+# Lint (run before every commit)
 {{LINT_COMMAND}} && {{FORMAT_CHECK_COMMAND}}
 
 # Tests
-{{TEST_COMMAND}}
+{{TEST_COMMAND}}              # full suite
 ```
+
+---
+
+## Code Style & Testing
+
+<!-- TODO: Run /configure to auto-detect, or define code style rules manually. -->
+
+**Lint:** `{{LINT_COMMAND}} && {{FORMAT_CHECK_COMMAND}}`
+**Test:** `{{TEST_COMMAND}}` — mock external services, never hit real APIs.
+
+See `bmad/qf-bmad/golden-principles.md` for project taste rules and style invariants.
 
 ---
 
 ## Key References
 
-| Doc | Path |
-|-----|------|
-| Architecture | `ARCHITECTURE.md` |
-| Golden Principles | `bmad/qf-bmad/golden-principles.md` |
+| Doc | Path | Notes |
+|-----|------|-------|
+| Architecture | `ARCHITECTURE.md` | Codemap, invariants, boundaries |
+| Golden Principles | `bmad/qf-bmad/golden-principles.md` | Style rules and taste invariants |
+| Core Beliefs | `docs/design-docs/core-beliefs.md` | Agent-first operating principles (create with `--full`) |
+| Core Config | `bmad/qf-bmad/core-config.yaml` | Project settings and specialist list |
+| BMAD Workflow | `bmad/qf-bmad/workflows/bmad-flow.md` | Orchestration phases |
+| Specialist Agents | `bmad/qf-bmad/agents/active/` | Domain-specific agent personas |
+| Epics & Stories | `bmad/epics/` | All epics and their stories |
+| Design Docs | `docs/design-docs/` | Technical design documents (create with `--full`) |
+| Exec Plans | `docs/exec-plans/` | Execution plans for complex work (create with `--full`) |
+| Product Specs | `docs/product-specs/` | Product specifications (create with `--full`) |
+| References | `docs/references/` | LLM-friendly dependency docs (create with `--full`) |
 {{KEY_FILES_TABLE}}
-
----
-
-## Environment Variables
-
-| Variable | Purpose |
-|----------|---------|
-<!-- TODO: List your environment variables. Example:
-| DATABASE_URL | PostgreSQL connection string |
-| SECRET_KEY   | JWT signing key              |
-| REDIS_URL    | Cache/queue connection        |
-Run /configure to auto-detect from .env files and code. -->
 
 ---
 
@@ -145,10 +102,5 @@ Run /configure to auto-detect from .env files and code. -->
 
 - [ ] Tests pass (`{{TEST_COMMAND}}`)
 - [ ] Linting passes (`{{LINT_COMMAND}}`)
-- [ ] Docstrings on new/modified public functions
 - [ ] BMAD story updated to `✅ Complete` with completion notes
-<!-- TODO: Add project-specific checklist items. Example:
-- [ ] Database migrations created (`alembic revision --autogenerate`)
-- [ ] API docs updated (OpenAPI schema)
-- [ ] Environment variables documented in .env.example
-Remove this comment and add your items above. -->
+<!-- TODO: Add project-specific checklist items. Run /configure to auto-detect. -->

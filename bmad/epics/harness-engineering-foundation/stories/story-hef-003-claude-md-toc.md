@@ -5,7 +5,8 @@ Story ID: hef-003
 Epic: harness-engineering-foundation
 Priority: High
 Estimated Effort: M
-Status: Draft
+Status: ✅ Complete
+**Completed**: 2026-03-13
 Assigned to: backend-specialist
 Created: 2026-03-13
 
@@ -82,10 +83,31 @@ A table-of-contents CLAUDE.md enables progressive disclosure: agents start with 
 - Verify development commands are still inline
 
 ## Definition of Done
-- [ ] CLAUDE.md.template restructured as table of contents
-- [ ] Under 120 lines of substantive content
-- [ ] All detailed sections either moved to referenced files or summarized with pointers
-- [ ] Development commands remain inline
-- [ ] Key References table is complete
-- [ ] Backward compatible with projects that don't have docs/
-- [ ] Story status updated
+- [x] CLAUDE.md.template restructured as table of contents
+- [x] Under 120 lines of substantive content
+- [x] All detailed sections either moved to referenced files or summarized with pointers
+- [x] Development commands remain inline
+- [x] Key References table is complete
+- [x] Backward compatible with projects that don't have docs/
+- [x] Story status updated
+
+## Completion Notes
+
+**Implemented**: 2026-03-13
+**Commit**: 6ad9727
+
+### Files Changed
+- `.claude/bmad-template/CLAUDE.md.template` — Restructured from 155 to 106 lines (72 substantive). Code Style, Testing Standards, Security consolidated into 3-line summary with pointer. Key References table expanded to 11 entries covering all knowledge sources.
+
+### Simplification Results
+- Files reviewed: 8
+- Issues found: 0
+- Issues fixed: 0
+- Lines removed: 48 (net reduction in CLAUDE.md.template)
+- Status: No issues found
+
+### CodeRabbit Review Results
+- Findings: 2 total (0 critical, 1 suggestion, 1 nit)
+- All addressed: Yes — removed pytest-specific `-x` flag, fixed design-doc-template reference
+- Re-review cycles: 1
+- Remaining items: None
