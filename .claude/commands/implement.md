@@ -150,6 +150,7 @@ For EACH story in the queue, execute this complete cycle:
 
 | Phase | Name | Mandatory | Description |
 |-------|------|-----------|-------------|
+| 0.5 | Context Verification | Lightweight | Verify ARCHITECTURE.md freshness and CLAUDE.md pointer validity |
 | 1 | Context Loading | ✅ | Read story, verify prerequisites, load specialist |
 | 2 | Exploration | ✅ | Scan codebase, identify change scope |
 | 3 | Implementation Planning | ✅ | Sequence changes, get user approval |
@@ -161,7 +162,48 @@ For EACH story in the queue, execute this complete cycle:
 | **8** | **Self-Review + Multi-Agent Review** | **✅ MANDATORY** | **Self-review + specialist domain reviews with escalation** |
 | 9 | Commit | ✅ | Stage, commit with gate check for Phases 7 & 8 |
 | 10 | Story Completion | ✅ | Update story file with completion notes |
+| 10.5 | Knowledge Update | Lightweight | Update docs with architectural decisions before commit |
 | **11** | **Push & Create PR** | **✅ AUTO** | **Push branch, create GitHub PR (runs after ALL stories complete)** |
+
+---
+
+### Phase 0.5: Context Verification (Lightweight)
+
+**Purpose**: Verify that knowledge artifacts are current before building on them. Quick file reads only — no lengthy analysis.
+
+> This phase runs once at the start of the story queue (not per-story).
+> If docs don't exist, it proceeds without blocking.
+
+```yaml
+0.5.1 Check ARCHITECTURE.md:
+    If ARCHITECTURE.md exists at $REPO_ROOT:
+      Quick-scan for references to files or modules that don't exist:
+      - Extract file paths and module names mentioned in the doc
+      - Glob/stat to verify they exist on disk
+      If stale references found:
+        Warn: "ARCHITECTURE.md references [N] files/modules that no longer exist:
+               - path/to/removed_module.py
+               - path/to/old_service/
+               Proceed with implementation anyway? [Y/update docs first]"
+      If clean: Log "ARCHITECTURE.md verified — references are current"
+    Else:
+      Log "No ARCHITECTURE.md found — skipping verification"
+
+0.5.2 Check CLAUDE.md Pointers:
+    If CLAUDE.md exists at $REPO_ROOT:
+      Verify key file references point to existing files
+      (e.g., test commands reference real test directories,
+       lint commands reference real config files)
+      If broken pointers found:
+        Warn: "CLAUDE.md references [N] paths that don't exist: [list]"
+      If clean: Log "CLAUDE.md pointers verified"
+    Else:
+      Log "No CLAUDE.md found — skipping verification"
+
+0.5.3 Proceed:
+    Context verification complete. Proceed to Phase 1.
+    Total time: <30 seconds (file reads only)
+```
 
 ---
 
@@ -651,6 +693,47 @@ For EACH story in the queue, execute this complete cycle:
 
 10.2 Update Epic Overview:
     If epic has a status table, update the story's row to Complete
+```
+
+### Phase 10.5: Knowledge Update (Lightweight, Optional)
+
+**Purpose**: Capture architectural decisions and new patterns discovered during implementation so future agent sessions benefit. Changes are staged and included in the story commit.
+
+> This phase is lightweight — quick prompts and optional writes. Skip if no architectural decisions were made.
+> All updates are staged with `git add` so they're included in the story commit.
+
+```yaml
+10.5.1 Check for Architectural Decisions:
+    Reflect: Did this implementation involve any of the following?
+    - New architectural patterns or conventions
+    - Decisions about module structure, boundaries, or data flow
+    - Deviations from the planned architecture
+    - Discovery of undocumented conventions
+
+    If none: Log "No architectural decisions to record — skipping Phase 10.5"
+             Proceed to Queue Continuation.
+
+10.5.2 Update Decision Log (if applicable):
+    If the epic has a Decision Log section in epic-overview.md:
+      Prompt: "Log these decisions in the epic Decision Log? [Y/n]"
+      If yes: Append decision entries with date, context, and rationale
+
+10.5.3 Update Architecture Docs (if applicable):
+    If new patterns were established that future stories should follow:
+      Prompt: "Update ARCHITECTURE.md or golden-principles.md? [Y/n]"
+      If yes: Make targeted updates to the relevant doc
+
+10.5.4 Note Quality Impact (if applicable):
+    If QUALITY_SCORE.md exists:
+      Note whether quality likely improved or degraded in the affected domain
+      (Do NOT re-run /score — just leave a brief note for the next /score run)
+
+10.5.5 Stage Updates:
+    ```bash
+    git add [any docs updated in this phase]
+    ```
+    These changes will be included in the story commit (Phase 9)
+    or committed alongside story completion updates.
 ```
 
 ---
