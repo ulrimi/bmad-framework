@@ -31,7 +31,7 @@ Claude Code resolves `/command` to `.claude/commands/command.md` — it does **n
 | EFF-003 | Parameterized specialist template | M | Low | None | ✅ Complete |
 | EFF-004 | Lazy module loading for specialists | S | Low | EFF-003 | Blocked |
 | EFF-005 | Eliminate init-bmad template duplication | L | High | None | ✅ Complete |
-| EFF-006 | Phase-Split /configure into modular phases | S | Low | EFF-001 | 📋 Ready |
+| EFF-006 | Phase-Split /configure into modular phases | S | Low | EFF-001 | ✅ Complete |
 | EFF-007 | Progressive disclosure documentation | S | None | All above | Blocked |
 
 ## Execution Order
