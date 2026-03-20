@@ -14,6 +14,9 @@
     - Match story domain to specialist file in bmad/config/agents/active/
     - Read specialist .md and adopt expertise
     - Match based on story keywords and specialist domain descriptions
+    - If specialist has a "Supplementary Modules" section:
+      Note the module paths and their load phases (e.g., "load during: phase-4, phase-5")
+      Do NOT load modules now — load them when entering the specified phase
 ```
 
 ## Next Phase

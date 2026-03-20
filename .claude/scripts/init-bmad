@@ -139,6 +139,29 @@ render_specialist() {
   content="${content//\{\{DOMAIN_DESC\}\}/${s_domain}}"
   content="${content//\{\{KEY_FILES_DESC\}\}/${s_keyfiles}}"
 
+  # Generate modules block (empty file if no modules configured)
+  awk -v id="  ${spec_id}:" '
+    $0 == id { in_spec=1; next }
+    in_spec && /^  [a-zA-Z]/ { in_spec=0 }
+    in_spec && /^    modules:/ { in_list=1; next }
+    in_spec && in_list && /^      - / {
+      if (!header_done) {
+        print "## Supplementary Modules"
+        print ""
+        print "Load these files when reaching the specified phases:"
+        header_done=1
+      }
+      val = substr($0, 9)
+      print "- " val
+      next
+    }
+    in_spec && in_list && /^    [a-zA-Z]/ { in_list=0 }
+  ' "$config_file" > "${tmpdir}/modules"
+  # Add trailing newline if modules block has content
+  if [[ -s "${tmpdir}/modules" ]]; then
+    echo "" >> "${tmpdir}/modules"
+  fi
+
   # Write scalar-substituted template to temp file
   echo "$content" > "${tmpdir}/template"
 
@@ -149,12 +172,14 @@ render_specialist() {
     -v pf="${tmpdir}/patterns" \
     -v af="${tmpdir}/activation" \
     -v gf="${tmpdir}/gates" \
+    -v mf="${tmpdir}/modules" \
   '
     /\{\{EXPERTISE_BLOCK\}\}/       { while ((getline line < ef) > 0) print line; next }
     /\{\{QUALITY_CRITERIA_BLOCK\}\}/ { while ((getline line < qf) > 0) print line; next }
     /\{\{PATTERNS_BLOCK\}\}/        { while ((getline line < pf) > 0) print line; next }
     /\{\{ACTIVATION_BLOCK\}\}/      { while ((getline line < af) > 0) print line; next }
     /\{\{QUALITY_GATES_BLOCK\}\}/   { while ((getline line < gf) > 0) print line; next }
+    /\{\{MODULES_BLOCK\}\}/         { while ((getline line < mf) > 0) print line; next }
     { print }
   ' "${tmpdir}/template" > "$output_file"
 

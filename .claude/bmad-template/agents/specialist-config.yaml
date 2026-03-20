@@ -1,6 +1,7 @@
 # Specialist Agent Configuration
 # Each specialist defines unique values substituted into specialist-template.md
 # To add a new specialist: add an entry here. No template changes needed.
+# Optional: add modules: list to include supplementary instruction files loaded on demand.
 
 specialists:
   backend:

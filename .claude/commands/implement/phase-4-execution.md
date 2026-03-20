@@ -2,6 +2,8 @@
 
 **CRITICAL**: Use TodoWrite to track each file. Mark complete as you go.
 
+**Module Loading**: If the active specialist has supplementary modules marked for phase-4, Read them now before starting file changes.
+
 ```yaml
 4.1 For Each File in Sequence:
 

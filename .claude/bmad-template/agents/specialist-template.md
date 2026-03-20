@@ -34,6 +34,7 @@ activation-instructions:
 **Quality gates for my domain**:
 {{QUALITY_GATES_BLOCK}}
 
+{{MODULES_BLOCK}}
 ## Application Driving
 <!-- TODO: Configure these for your project's application-driving capabilities -->
 <!-- Uncomment and fill in to enable runtime validation during /implement -->
