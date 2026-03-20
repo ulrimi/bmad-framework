@@ -10,7 +10,8 @@ This phase includes story file updates (9) and optional knowledge updates (9.5).
 9.1 Update Story File:
     Edit the story .md file:
 
-    - Change Status: `📋 Ready` → `✅ Complete`
+    - Update YAML frontmatter: `status: 📋 Ready` → `status: ✅ Complete`
+    - Change bold Status: `📋 Ready` → `✅ Complete`
     - Add: `**Completed**: [TODAY'S DATE]`
     - Mark Definition of Done checkboxes: `[x]`
     - Add Completion Notes section:

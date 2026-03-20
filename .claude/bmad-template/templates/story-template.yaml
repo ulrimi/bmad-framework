@@ -22,11 +22,21 @@ variables:
   priority: "Medium"
   estimated_effort: "Medium"
   assigned_agent: "dev-agent"
+  specialist_domain: "backend"
 
 sections:
   - id: header
     title: Story Header
     template: |
+      ---
+      id: {{epic_name}}-{{story_number}}
+      epic: {{epic_name}}
+      specialist: {{specialist_domain}}
+      status: Draft
+      scope: []
+      depends_on: []
+      ---
+
       # Story: {{story_title}}
 
       **Story ID**: {{epic_name}}-{{story_number}}

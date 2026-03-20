@@ -118,6 +118,24 @@ Ensure story includes:
 
 Write to: `$REPO_ROOT/bmad/epics/[epic]/stories/story-00N-[name].md`
 
+The story file MUST include YAML frontmatter before the markdown content:
+```markdown
+---
+id: epic-name-001
+epic: epic-name
+specialist: backend
+status: Draft
+scope: [src/api/, src/models/]
+depends_on: []
+---
+
+# Story: Brief Title
+...
+```
+
+The frontmatter enables lean queue-building without loading full story bodies.
+Both frontmatter AND bold metadata (`**Status**:`, etc.) should be present for human readability.
+
 ### Step 5: Update Epic Overview
 
 Add story to epic's story list with status.

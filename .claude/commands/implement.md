@@ -36,6 +36,12 @@ If none match: show error with available epics from `$REPO_ROOT/bmad/epics/`.
 
 ## Build Story Queue
 
+For each story file, extract routing metadata using **frontmatter-first parsing**:
+
+1. Read first 10 lines of the story file
+2. If `---` fence detected on line 1, parse YAML frontmatter for `status`, `specialist`, `depends_on`
+3. If no frontmatter, fall back to parsing bold metadata lines (`**Status**:`, `**Assigned to**:`)
+
 ```python
 story_queue = []
 for arg in ARGUMENTS:
@@ -43,7 +49,8 @@ for arg in ARGUMENTS:
     if EPIC_MODE:
         stories = glob(f"{epic_dir}/stories/story-*.md")
         for story in sorted(stories):
-            if story.status not in ['Complete', 'Archived']:
+            metadata = parse_frontmatter_or_bold(story)  # frontmatter-first
+            if metadata.status not in ['Complete', 'Archived', '✅ Complete']:
                 story_queue.append(story)
     elif STORY_MODE:
         story_queue.append(resolved_story_path)
@@ -55,7 +62,7 @@ if not story_queue:
 
 | # | Story | Status | Specialist |
 |---|-------|--------|------------|
-| 1 | story-001-*.md | Ready | [from frontmatter or bold metadata] |
+| 1 | story-001-*.md | Ready | [from frontmatter `specialist:` or bold `**Assigned to**:`] |
 
 Show estimated scope, branch name. Ask: **Proceed? [Y/n]**
 

@@ -27,7 +27,7 @@ Claude Code resolves `/command` to `.claude/commands/command.md` — it does **n
 | Story | Title | Effort | Risk | Dependencies | Status |
 |-------|-------|--------|------|-------------|--------|
 | EFF-001 | Phase-Split /implement into modular phases | L | Medium | None | ✅ Complete |
-| EFF-002 | Story YAML frontmatter for routing | S | Low | EFF-001 | 📋 Ready |
+| EFF-002 | Story YAML frontmatter for routing | S | Low | EFF-001 | ✅ Complete |
 | EFF-003 | Parameterized specialist template | M | Low | None | ✅ Complete |
 | EFF-004 | Lazy module loading for specialists | S | Low | EFF-003 | Blocked |
 | EFF-005 | Eliminate init-bmad template duplication | L | High | None | ✅ Complete |

@@ -42,8 +42,12 @@ From `ARCHITECTURE.md` and codebase, gather:
 
 ### Step 4: Create Story File
 
-Use `templates/story-template.yaml` to create a complete story:
-1. Story Header (metadata)
+Use `templates/story-template.yaml` to create a complete story.
+Include YAML frontmatter (`---` fences) with routing metadata before the markdown body:
+- `id`, `epic`, `specialist`, `status`, `scope`, `depends_on`
+
+Then include all sections:
+1. Story Header (bold metadata for human readability)
 2. User Story (As a / I want / So that)
 3. Acceptance Criteria (Given-When-Then)
 4. Technical Context (architecture references)
