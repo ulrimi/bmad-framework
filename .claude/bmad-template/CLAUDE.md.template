@@ -82,6 +82,16 @@ See `bmad/config/golden-principles.md` for project taste rules and style invaria
 
 ---
 
+## Template Resolution
+
+When reading files from `bmad/config/` that don't exist locally (workflows, tasks, templates, checklists):
+1. Read `bmad/config/source.yaml` for `framework.template_dir`
+2. Read the file from `{template_dir}/{path_relative_to_bmad/config/}`
+3. Substitute `{{PROJECT_NAME}}` and other `{{VAR}}` placeholders using values from `bmad/config/source.yaml` `project_values` section
+4. If `source.yaml` doesn't exist, files were copied locally (portable mode) — use local paths only
+
+---
+
 ## Key References
 
 | Doc | Path | Notes |

@@ -191,6 +191,7 @@ GITIGNORE_BMAD=""
 FULL_SCAFFOLD=false
 UPGRADE_MODE=false
 DRY_RUN=false
+PORTABLE_MODE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -206,6 +207,7 @@ while [[ $# -gt 0 ]]; do
     --gitignore)          GITIGNORE_BMAD="yes"; shift ;;
     --no-gitignore)       GITIGNORE_BMAD="no"; shift ;;
     --full)               FULL_SCAFFOLD=true; shift ;;
+    --portable)           PORTABLE_MODE=true; shift ;;
     --upgrade)            UPGRADE_MODE=true; shift ;;
     --dry-run)            DRY_RUN=true; shift ;;
     --non-interactive)    NON_INTERACTIVE=true; shift ;;
@@ -223,6 +225,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --data-tools TOOLS          Data tools (e.g., pandas, sqlalchemy, spark)"
       echo "  --database DB               Database: postgres|mysql|sqlite|mongodb|none"
       echo "  --full                      Scaffold full docs/ knowledge base (design-docs, exec-plans, etc.)"
+      echo "  --portable                  Copy all template files (for CI/offline; default: reference via source.yaml)"
       echo "  --upgrade                   Non-destructive upgrade: detect and add missing harness artifacts"
       echo "  --dry-run                   Show what --upgrade would do, without making changes"
       echo "  --gitignore                 Add BMAD files to .gitignore (for existing/corporate repos)"
@@ -1052,24 +1055,57 @@ mkdir -p bmad/config/checklists
 mkdir -p bmad/config/agents/active
 mkdir -p bmad/epics
 
-# ─── Copy template files ────────────────────────────────────────────────────────
-info "Copying workflow, task, template, and checklist files..."
-cp "${TEMPLATE_DIR}/workflows/"*.md bmad/config/workflows/
-cp "${TEMPLATE_DIR}/tasks/"*.md bmad/config/tasks/
-cp "${TEMPLATE_DIR}/templates/"* bmad/config/templates/
-cp "${TEMPLATE_DIR}/checklists/"*.md bmad/config/checklists/
+# ─── Copy or reference template files ──────────────────────────────────────────
+if [[ "${PORTABLE_MODE}" == true ]]; then
+  info "Copying workflow, task, template, and checklist files (portable mode)..."
+  cp "${TEMPLATE_DIR}/workflows/"*.md bmad/config/workflows/
+  cp "${TEMPLATE_DIR}/tasks/"*.md bmad/config/tasks/
+  cp "${TEMPLATE_DIR}/templates/"* bmad/config/templates/
+  cp "${TEMPLATE_DIR}/checklists/"*.md bmad/config/checklists/
 
-# Replace placeholders in checklist files
-for f in bmad/config/checklists/*.md; do
-  sed -i.bak \
-    -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
-    -e "s|{{DEPS_INSTALL_CMD}}|${DEPS_INSTALL_CMD}|g" \
-    -e "s|{{APP_LAUNCH_CMD}}|${APP_LAUNCH_CMD}|g" \
-    -e "s|{{TEST_CMD}}|${TEST_CMD}|g" \
-    -e "s|{{LINT_CMD}}|${LINT_CMD}|g" \
-    -e "s|{{FORMAT_CMD}}|${FORMAT_CHECK_CMD}|g" \
-    "${f}" && rm "${f}.bak"
-done
+  # Replace placeholders in checklist files
+  for f in bmad/config/checklists/*.md; do
+    sed -i.bak \
+      -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
+      -e "s|{{DEPS_INSTALL_CMD}}|${DEPS_INSTALL_CMD}|g" \
+      -e "s|{{APP_LAUNCH_CMD}}|${APP_LAUNCH_CMD}|g" \
+      -e "s|{{TEST_CMD}}|${TEST_CMD}|g" \
+      -e "s|{{LINT_CMD}}|${LINT_CMD}|g" \
+      -e "s|{{FORMAT_CMD}}|${FORMAT_CHECK_CMD}|g" \
+      "${f}" && rm "${f}.bak"
+  done
+else
+  info "Creating source.yaml reference (shared files resolve from framework)..."
+  cat > bmad/config/source.yaml << SRCEOF
+# BMAD Framework Source Reference
+# Shared files (workflows, tasks, templates, checklists) are resolved from the
+# framework template directory instead of being copied into the project.
+# Local overrides: place a file at the same relative path under bmad/config/
+# to override the framework version.
+# Portable mode: run init-bmad --portable to copy all files locally.
+framework:
+  template_dir: "${TEMPLATE_DIR}"
+  resolve_order:
+    - local     # bmad/config/{path} — project-specific overrides
+    - framework # {template_dir}/{path} — shared framework files
+
+referenced_paths:
+  - workflows/
+  - tasks/
+  - templates/
+  - checklists/
+
+project_values:
+  PROJECT_NAME: "${PROJECT_NAME}"
+  TEST_COMMAND: "${TEST_CMD}"
+  LINT_COMMAND: "${LINT_CMD}"
+  FORMAT_CHECK_COMMAND: "${FORMAT_CHECK_CMD}"
+  APP_LAUNCH_COMMAND: "${APP_LAUNCH_CMD}"
+  ENV_ACTIVATE_CMD: "${ENV_ACTIVATE_CMD}"
+  DEPS_INSTALL_CMD: "${DEPS_INSTALL_CMD}"
+SRCEOF
+  success "  Created bmad/config/source.yaml"
+fi
 
 # ─── Copy ARCHITECTURE.md to repo root ─────────────────────────────────────────
 if [[ ! -f "ARCHITECTURE.md" ]]; then
@@ -1096,46 +1132,47 @@ if [[ -f "${TEMPLATE_DIR}/templates/golden-principles.md" ]]; then
   success "bmad/config/golden-principles.md created."
 fi
 
-# Replace placeholders in task files
-for f in bmad/config/tasks/*.md; do
-  sed -i.bak \
-    -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
-    -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
-    -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
-    "${f}" && rm "${f}.bak"
-done
-
-# Replace placeholders in workflow files
-for f in bmad/config/workflows/*.md; do
-  sed -i.bak \
-    -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
-    -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
-    -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
-    -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
-    "${f}" && rm "${f}.bak"
-done
-
-# Replace specialist table in bmad-flow.md with actual specialist list
-if [[ -f "bmad/config/workflows/bmad-flow.md" ]]; then
-  FLOW_TABLE_TMP=$(mktemp)
-  for spec in "${SPECIALIST_LIST[@]}"; do
-    spec_cap="$(capitalize "${spec}")"
-    echo "| **${spec_cap} Specialist** | ${spec_cap} domain expertise |" >> "${FLOW_TABLE_TMP}"
+# Replace placeholders in copied files (portable mode only)
+if [[ "${PORTABLE_MODE}" == true ]]; then
+  for f in bmad/config/tasks/*.md; do
+    sed -i.bak \
+      -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
+      -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
+      -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
+      "${f}" && rm "${f}.bak"
   done
 
-  awk -v table_file="${FLOW_TABLE_TMP}" '
-    /<!-- TODO:.*Replace with your active specialists/ {
-      while ((getline line < table_file) > 0) print line
-      close(table_file)
-      # Consume rest of multi-line HTML comment
-      if ($0 !~ /-->/) { while (getline > 0 && $0 !~ /-->/) {} }
-      next
-    }
-    { print }
-  ' "bmad/config/workflows/bmad-flow.md" > "bmad/config/workflows/bmad-flow.md.tmp" && \
-    mv "bmad/config/workflows/bmad-flow.md.tmp" "bmad/config/workflows/bmad-flow.md"
+  for f in bmad/config/workflows/*.md; do
+    sed -i.bak \
+      -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+      -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
+      -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
+      -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
+      "${f}" && rm "${f}.bak"
+  done
 
-  rm -f "${FLOW_TABLE_TMP}"
+  # Replace specialist table in bmad-flow.md with actual specialist list
+  if [[ -f "bmad/config/workflows/bmad-flow.md" ]]; then
+    FLOW_TABLE_TMP=$(mktemp)
+    for spec in "${SPECIALIST_LIST[@]}"; do
+      spec_cap="$(capitalize "${spec}")"
+      echo "| **${spec_cap} Specialist** | ${spec_cap} domain expertise |" >> "${FLOW_TABLE_TMP}"
+    done
+
+    awk -v table_file="${FLOW_TABLE_TMP}" '
+      /<!-- TODO:.*Replace with your active specialists/ {
+        while ((getline line < table_file) > 0) print line
+        close(table_file)
+        # Consume rest of multi-line HTML comment
+        if ($0 !~ /-->/) { while (getline > 0 && $0 !~ /-->/) {} }
+        next
+      }
+      { print }
+    ' "bmad/config/workflows/bmad-flow.md" > "bmad/config/workflows/bmad-flow.md.tmp" && \
+      mv "bmad/config/workflows/bmad-flow.md.tmp" "bmad/config/workflows/bmad-flow.md"
+
+    rm -f "${FLOW_TABLE_TMP}"
+  fi
 fi
 
 # ─── Derive test framework name ─────────────────────────────────────────────
