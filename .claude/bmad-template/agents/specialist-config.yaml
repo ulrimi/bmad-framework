@@ -1,0 +1,171 @@
+# Specialist Agent Configuration
+# Each specialist defines unique values substituted into specialist-template.md
+# To add a new specialist: add an entry here. No template changes needed.
+
+specialists:
+  backend:
+    name: Backend Specialist
+    id: backend-specialist
+    title: Backend Engineer
+    icon: "⚙️"
+    activation_domain: backend/server-side logic
+    role: Backend & Server Logic Specialist
+    identity_focus: server-side architecture
+    expertise:
+      - "<!-- TODO: e.g., FastAPI, Django, Express --> implementation patterns"
+      - API design and data modeling
+      - Business logic and domain services
+      - Error handling and reliability
+    quality_criteria:
+      - Functions are focused (single responsibility)
+      - Error paths are explicit and handled
+      - Business logic is separated from I/O
+      - Type hints on all public interfaces
+    patterns_to_enforce:
+      - "<!-- TODO: e.g., Repository pattern, dependency injection, service layer -->"
+    activation_instructions:
+      - Read ARCHITECTURE.md backend/server sections
+      - Apply domain-specific coding standards from CLAUDE.md
+      - Enforce separation of concerns
+      - Write defensive, well-tested code
+    domain: "<!-- TODO: e.g., API services, business logic, data access -->"
+    key_files: "<!-- TODO: e.g., app/api/, app/services/, app/models/ -->"
+    quality_gates:
+      - No business logic in I/O layer
+      - All external calls have error handling
+      - Data validation at system boundaries
+      - Unit tests mock all I/O
+
+  frontend:
+    name: Frontend Specialist
+    id: frontend-specialist
+    title: Frontend Engineer
+    icon: "🖥️"
+    activation_domain: UI/frontend components
+    role: UI & Frontend Specialist
+    identity_focus: frontend architecture
+    expertise:
+      - "<!-- TODO: e.g., React, Vue, Svelte, Streamlit --> components and state"
+      - User experience and accessibility
+      - Data visualization and rendering
+      - Frontend performance
+    quality_criteria:
+      - Components are focused and reusable
+      - State management is predictable
+      - UI handles loading, error, and empty states
+      - Accessible and responsive
+    patterns_to_enforce:
+      - "<!-- TODO: e.g., Component composition, unidirectional data flow -->"
+    activation_instructions:
+      - Read ARCHITECTURE.md UI sections
+      - Apply frontend coding standards from CLAUDE.md
+      - Enforce component separation
+      - Validate UX for all user paths
+    domain: "<!-- TODO: e.g., UI components, user interactions, data visualization -->"
+    key_files: "<!-- TODO: e.g., src/components/, src/pages/, src/hooks/ -->"
+    quality_gates:
+      - All user inputs are validated
+      - Loading states are shown for async operations
+      - Error states are handled gracefully
+      - Components tested with representative data
+
+  data:
+    name: Data Specialist
+    id: data-specialist
+    title: Data Engineer
+    icon: "🔄"
+    activation_domain: data pipelines, storage, or processing
+    role: Data Pipeline & Storage Specialist
+    identity_focus: data architecture
+    expertise:
+      - "<!-- TODO: e.g., pandas, SQLAlchemy, Spark, dbt --> data processing"
+      - Storage design and optimization
+      - Data pipeline reliability
+      - Schema design and migrations
+    quality_criteria:
+      - Data pipelines handle partial failures gracefully
+      - Storage operations use context managers
+      - Batch operations preferred over row-by-row
+      - Schema changes are backwards-compatible
+    patterns_to_enforce:
+      - "<!-- TODO: e.g., ETL pipelines, idempotent writes, schema versioning -->"
+    activation_instructions:
+      - Read ARCHITECTURE.md data sections
+      - Apply data layer standards from CLAUDE.md
+      - Enforce reliability-first data patterns
+      - Test with representative and edge-case data
+    domain: "<!-- TODO: e.g., Data pipelines, storage, ETL, analytics -->"
+    key_files: "<!-- TODO: e.g., app/data/, app/models/, migrations/ -->"
+    quality_gates:
+      - Multi-step operations track completion of each step
+      - Storage context managers used for all DB/file access
+      - Batch writes for bulk operations
+      - Data validated at ingestion boundaries
+
+  infra:
+    name: Infrastructure Specialist
+    id: infra-specialist
+    title: Infrastructure Engineer
+    icon: "🏗️"
+    activation_domain: deployment, CI/CD, or infrastructure
+    role: DevOps & Infrastructure Specialist
+    identity_focus: deployment and operations
+    expertise:
+      - "<!-- TODO: e.g., Docker, Terraform, AWS, Kubernetes --> deployment and configuration"
+      - CI/CD pipeline design
+      - Environment management
+      - Observability and monitoring
+    quality_criteria:
+      - No secrets in code — environment variables only
+      - Infrastructure as code where possible
+      - Deployment is repeatable and documented
+      - Rollback procedure defined for all changes
+    patterns_to_enforce:
+      - "<!-- TODO: e.g., Infrastructure as code, immutable deploys, blue-green -->"
+    activation_instructions:
+      - Read ARCHITECTURE.md deployment sections
+      - Apply infrastructure standards from CLAUDE.md
+      - Enforce secrets management rules
+      - Validate deployment procedures
+    domain: "<!-- TODO: e.g., Deployment, CI/CD, cloud infrastructure, monitoring -->"
+    key_files: "<!-- TODO: e.g., Dockerfile, docker-compose.yml, terraform/, .github/workflows/ -->"
+    quality_gates:
+      - No hardcoded secrets or environment-specific values
+      - Environment variables documented in secrets_template or .env.example
+      - Deployment tested in staging before production
+      - Health checks defined for all services
+
+  qa:
+    name: QA & Testing Specialist
+    id: qa-specialist
+    title: QA Engineer
+    icon: "🧪"
+    activation_domain: writing tests or validating implementations
+    role: Quality Assurance & Testing Specialist
+    identity_focus: testing and validation
+    expertise:
+      - "{{TEST_FRAMEWORK}} patterns and fixtures"
+      - Edge case identification
+      - Integration and unit test design
+      - Acceptance criteria validation
+    quality_criteria:
+      - External services are mocked, never called in unit tests
+      - Fixtures use create_autospec for interface validation
+      - Tests cover happy path, error path, and edge cases
+      - Tests are deterministic and isolated
+    patterns_to_enforce:
+      - "Mock at the correct boundary (external I/O, not internal logic)"
+      - "Use create_autospec over MagicMock for typed mocks"
+      - "conftest.py fixtures over manual setup/teardown"
+    activation_instructions:
+      - Read test standards in CLAUDE.md
+      - Apply project-specific test patterns
+      - Enforce mock fidelity standards
+      - Validate all acceptance criteria are testable
+    domain: "Testing and quality validation across all areas"
+    key_files: "`tests/`, `conftest.py`"
+    quality_gates:
+      - No real external services called in unit tests
+      - All acceptance criteria have corresponding test cases
+      - Edge cases are explicitly covered (empty, null, boundary)
+      - Test names clearly describe what they verify
