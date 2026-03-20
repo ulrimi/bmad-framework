@@ -4,7 +4,7 @@
 
 **Epic ID**: efficiency-refactor
 **Created**: 2026-03-20
-**Status**: Draft
+**Status**: ✅ Complete
 **Goal**: Reduce context window waste by 50-65% through progressive disclosure — loading only the instructions Claude needs at each moment
 
 ## Problem Statement
@@ -32,7 +32,7 @@ Claude Code resolves `/command` to `.claude/commands/command.md` — it does **n
 | EFF-004 | Lazy module loading for specialists | S | Low | EFF-003 | ✅ Complete |
 | EFF-005 | Eliminate init-bmad template duplication | L | High | None | ✅ Complete |
 | EFF-006 | Phase-Split /configure into modular phases | S | Low | EFF-001 | ✅ Complete |
-| EFF-007 | Progressive disclosure documentation | S | None | All above | Blocked |
+| EFF-007 | Progressive disclosure documentation | S | None | All above | ✅ Complete |
 
 ## Execution Order
 
