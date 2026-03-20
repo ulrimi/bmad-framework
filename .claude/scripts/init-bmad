@@ -216,7 +216,7 @@ GITIGNORE_BMAD=""
 FULL_SCAFFOLD=false
 UPGRADE_MODE=false
 DRY_RUN=false
-PORTABLE_MODE=false
+REFERENCE_MODE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -232,7 +232,7 @@ while [[ $# -gt 0 ]]; do
     --gitignore)          GITIGNORE_BMAD="yes"; shift ;;
     --no-gitignore)       GITIGNORE_BMAD="no"; shift ;;
     --full)               FULL_SCAFFOLD=true; shift ;;
-    --portable)           PORTABLE_MODE=true; shift ;;
+    --reference)          REFERENCE_MODE=true; shift ;;
     --upgrade)            UPGRADE_MODE=true; shift ;;
     --dry-run)            DRY_RUN=true; shift ;;
     --non-interactive)    NON_INTERACTIVE=true; shift ;;
@@ -250,7 +250,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --data-tools TOOLS          Data tools (e.g., pandas, sqlalchemy, spark)"
       echo "  --database DB               Database: postgres|mysql|sqlite|mongodb|none"
       echo "  --full                      Scaffold full docs/ knowledge base (design-docs, exec-plans, etc.)"
-      echo "  --portable                  Copy all template files (for CI/offline; default: reference via source.yaml)"
+      echo "  --reference                 Reference shared files via source.yaml instead of copying (experimental)"
       echo "  --upgrade                   Non-destructive upgrade: detect and add missing harness artifacts"
       echo "  --dry-run                   Show what --upgrade would do, without making changes"
       echo "  --gitignore                 Add BMAD files to .gitignore (for existing/corporate repos)"
@@ -1081,26 +1081,8 @@ mkdir -p bmad/config/agents/active
 mkdir -p bmad/epics
 
 # ─── Copy or reference template files ──────────────────────────────────────────
-if [[ "${PORTABLE_MODE}" == true ]]; then
-  info "Copying workflow, task, template, and checklist files (portable mode)..."
-  cp "${TEMPLATE_DIR}/workflows/"*.md bmad/config/workflows/
-  cp "${TEMPLATE_DIR}/tasks/"*.md bmad/config/tasks/
-  cp "${TEMPLATE_DIR}/templates/"* bmad/config/templates/
-  cp "${TEMPLATE_DIR}/checklists/"*.md bmad/config/checklists/
-
-  # Replace placeholders in checklist files
-  for f in bmad/config/checklists/*.md; do
-    sed -i.bak \
-      -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
-      -e "s|{{DEPS_INSTALL_CMD}}|${DEPS_INSTALL_CMD}|g" \
-      -e "s|{{APP_LAUNCH_CMD}}|${APP_LAUNCH_CMD}|g" \
-      -e "s|{{TEST_CMD}}|${TEST_CMD}|g" \
-      -e "s|{{LINT_CMD}}|${LINT_CMD}|g" \
-      -e "s|{{FORMAT_CMD}}|${FORMAT_CHECK_CMD}|g" \
-      "${f}" && rm "${f}.bak"
-  done
-else
-  info "Creating source.yaml reference (shared files resolve from framework)..."
+if [[ "${REFERENCE_MODE}" == true ]]; then
+  info "Creating source.yaml reference (shared files resolve from framework — experimental)..."
   cat > bmad/config/source.yaml << SRCEOF
 # BMAD Framework Source Reference
 # Shared files (workflows, tasks, templates, checklists) are resolved from the
@@ -1130,6 +1112,24 @@ project_values:
   DEPS_INSTALL_CMD: "${DEPS_INSTALL_CMD}"
 SRCEOF
   success "  Created bmad/config/source.yaml"
+else
+  info "Copying workflow, task, template, and checklist files..."
+  cp "${TEMPLATE_DIR}/workflows/"*.md bmad/config/workflows/
+  cp "${TEMPLATE_DIR}/tasks/"*.md bmad/config/tasks/
+  cp "${TEMPLATE_DIR}/templates/"* bmad/config/templates/
+  cp "${TEMPLATE_DIR}/checklists/"*.md bmad/config/checklists/
+
+  # Replace placeholders in checklist files
+  for f in bmad/config/checklists/*.md; do
+    sed -i.bak \
+      -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
+      -e "s|{{DEPS_INSTALL_CMD}}|${DEPS_INSTALL_CMD}|g" \
+      -e "s|{{APP_LAUNCH_CMD}}|${APP_LAUNCH_CMD}|g" \
+      -e "s|{{TEST_CMD}}|${TEST_CMD}|g" \
+      -e "s|{{LINT_CMD}}|${LINT_CMD}|g" \
+      -e "s|{{FORMAT_CMD}}|${FORMAT_CHECK_CMD}|g" \
+      "${f}" && rm "${f}.bak"
+  done
 fi
 
 # ─── Copy ARCHITECTURE.md to repo root ─────────────────────────────────────────
@@ -1158,7 +1158,7 @@ if [[ -f "${TEMPLATE_DIR}/templates/golden-principles.md" ]]; then
 fi
 
 # Replace placeholders in copied files (portable mode only)
-if [[ "${PORTABLE_MODE}" == true ]]; then
+if [[ "${REFERENCE_MODE}" != true ]]; then
   for f in bmad/config/tasks/*.md; do
     sed -i.bak \
       -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
