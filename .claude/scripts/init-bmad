@@ -51,6 +51,141 @@ _scaffold_lints() {
   chmod +x lints/*.py lints/*.js 2>/dev/null || true
 }
 
+# Render a specialist agent from template + config.
+# Usage: render_specialist <spec_id> <config_file> <template_file> <output_file>
+render_specialist() {
+  local spec_id="$1" config_file="$2" template_file="$3" output_file="$4"
+  local tmpdir
+  tmpdir=$(mktemp -d)
+
+  # Extract a scalar field value for this specialist from the YAML config
+  _spec_field() {
+    awk -v id="  ${1}:" -v field="    ${2}:" '
+      $0 == id { in_spec=1; next }
+      in_spec && /^  [a-zA-Z]/ { in_spec=0 }
+      in_spec && index($0, field) == 1 {
+        val = substr($0, length(field)+2)
+        gsub(/^[ \t"]+|["]+$/, "", val)
+        print val
+      }
+    ' "$config_file"
+  }
+
+  # Extract a list field as indented YAML items (    - value) and write to file
+  _spec_list_to_file() {
+    awk -v id="  ${1}:" -v field="    ${2}:" '
+      $0 == id { in_spec=1; next }
+      in_spec && /^  [a-zA-Z]/ { in_spec=0 }
+      in_spec && index($0, field) == 1 { in_list=1; next }
+      in_spec && in_list && /^      - / {
+        val = substr($0, 7)
+        print "    " val
+        next
+      }
+      in_spec && in_list && /^    [a-zA-Z]/ { in_list=0 }
+    ' "$config_file" > "$3"
+  }
+
+  # Extract a list field as markdown checkbox items and write to file
+  _spec_gates_to_file() {
+    awk -v id="  ${1}:" -v field="    ${2}:" '
+      $0 == id { in_spec=1; next }
+      in_spec && /^  [a-zA-Z]/ { in_spec=0 }
+      in_spec && index($0, field) == 1 { in_list=1; next }
+      in_spec && in_list && /^      - / {
+        val = substr($0, 9)
+        print "- [ ] " val
+        next
+      }
+      in_spec && in_list && /^    [a-zA-Z]/ { in_list=0 }
+    ' "$config_file" > "$3"
+  }
+
+  # Read scalar values
+  local s_name s_id s_title s_icon s_activation s_role s_identity s_domain s_keyfiles
+  s_name="$(_spec_field "$spec_id" "name")"
+  s_id="$(_spec_field "$spec_id" "id")"
+  s_title="$(_spec_field "$spec_id" "title")"
+  s_icon="$(_spec_field "$spec_id" "icon")"
+  s_activation="$(_spec_field "$spec_id" "activation_domain")"
+  s_role="$(_spec_field "$spec_id" "role")"
+  s_identity="$(_spec_field "$spec_id" "identity_focus")"
+  s_domain="$(_spec_field "$spec_id" "domain")"
+  s_keyfiles="$(_spec_field "$spec_id" "key_files")"
+
+  # If specialist not found in config, clean up and return 1
+  if [[ -z "$s_name" ]]; then
+    rm -rf "$tmpdir"
+    return 1
+  fi
+
+  # Write list blocks to temp files (avoids multi-line awk variable issues)
+  _spec_list_to_file "$spec_id" "expertise" "${tmpdir}/expertise"
+  _spec_list_to_file "$spec_id" "quality_criteria" "${tmpdir}/quality_criteria"
+  _spec_list_to_file "$spec_id" "patterns_to_enforce" "${tmpdir}/patterns"
+  _spec_list_to_file "$spec_id" "activation_instructions" "${tmpdir}/activation"
+  _spec_gates_to_file "$spec_id" "quality_gates" "${tmpdir}/gates"
+
+  # Read template and perform scalar substitutions
+  local content
+  content=$(<"$template_file")
+  content="${content//\{\{SPECIALIST_NAME\}\}/${s_name}}"
+  content="${content//\{\{SPECIALIST_ID\}\}/${s_id}}"
+  content="${content//\{\{SPECIALIST_TITLE\}\}/${s_title}}"
+  content="${content//\{\{SPECIALIST_ICON\}\}/${s_icon}}"
+  content="${content//\{\{ACTIVATION_DOMAIN\}\}/${s_activation}}"
+  content="${content//\{\{PERSONA_ROLE\}\}/${s_role}}"
+  content="${content//\{\{IDENTITY_FOCUS\}\}/${s_identity}}"
+  content="${content//\{\{DOMAIN_DESC\}\}/${s_domain}}"
+  content="${content//\{\{KEY_FILES_DESC\}\}/${s_keyfiles}}"
+
+  # Generate modules block (empty file if no modules configured)
+  awk -v id="  ${spec_id}:" '
+    $0 == id { in_spec=1; next }
+    in_spec && /^  [a-zA-Z]/ { in_spec=0 }
+    in_spec && /^    modules:/ { in_list=1; next }
+    in_spec && in_list && /^      - / {
+      if (!header_done) {
+        print "## Supplementary Modules"
+        print ""
+        print "Load these files when reaching the specified phases:"
+        header_done=1
+      }
+      val = substr($0, 9)
+      print "- " val
+      next
+    }
+    in_spec && in_list && /^    [a-zA-Z]/ { in_list=0 }
+  ' "$config_file" > "${tmpdir}/modules"
+  # Add trailing newline if modules block has content
+  if [[ -s "${tmpdir}/modules" ]]; then
+    echo "" >> "${tmpdir}/modules"
+  fi
+
+  # Write scalar-substituted template to temp file
+  echo "$content" > "${tmpdir}/template"
+
+  # Replace block placeholders by reading from temp files
+  awk \
+    -v ef="${tmpdir}/expertise" \
+    -v qf="${tmpdir}/quality_criteria" \
+    -v pf="${tmpdir}/patterns" \
+    -v af="${tmpdir}/activation" \
+    -v gf="${tmpdir}/gates" \
+    -v mf="${tmpdir}/modules" \
+  '
+    /\{\{EXPERTISE_BLOCK\}\}/       { while ((getline line < ef) > 0) print line; next }
+    /\{\{QUALITY_CRITERIA_BLOCK\}\}/ { while ((getline line < qf) > 0) print line; next }
+    /\{\{PATTERNS_BLOCK\}\}/        { while ((getline line < pf) > 0) print line; next }
+    /\{\{ACTIVATION_BLOCK\}\}/      { while ((getline line < af) > 0) print line; next }
+    /\{\{QUALITY_GATES_BLOCK\}\}/   { while ((getline line < gf) > 0) print line; next }
+    /\{\{MODULES_BLOCK\}\}/         { while ((getline line < mf) > 0) print line; next }
+    { print }
+  ' "${tmpdir}/template" > "$output_file"
+
+  rm -rf "$tmpdir"
+}
+
 # ─── Pre-flight ───────────────────────────────────────────────────────────────
 if [[ ! -d "${TEMPLATE_DIR}" ]]; then
   error "Template directory not found: ${TEMPLATE_DIR}\nRun: ls ~/.claude/bmad-template to verify install."
@@ -81,6 +216,7 @@ GITIGNORE_BMAD=""
 FULL_SCAFFOLD=false
 UPGRADE_MODE=false
 DRY_RUN=false
+REFERENCE_MODE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -96,6 +232,7 @@ while [[ $# -gt 0 ]]; do
     --gitignore)          GITIGNORE_BMAD="yes"; shift ;;
     --no-gitignore)       GITIGNORE_BMAD="no"; shift ;;
     --full)               FULL_SCAFFOLD=true; shift ;;
+    --reference)          REFERENCE_MODE=true; shift ;;
     --upgrade)            UPGRADE_MODE=true; shift ;;
     --dry-run)            DRY_RUN=true; shift ;;
     --non-interactive)    NON_INTERACTIVE=true; shift ;;
@@ -113,6 +250,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --data-tools TOOLS          Data tools (e.g., pandas, sqlalchemy, spark)"
       echo "  --database DB               Database: postgres|mysql|sqlite|mongodb|none"
       echo "  --full                      Scaffold full docs/ knowledge base (design-docs, exec-plans, etc.)"
+      echo "  --reference                 Reference shared files via source.yaml instead of copying (experimental)"
       echo "  --upgrade                   Non-destructive upgrade: detect and add missing harness artifacts"
       echo "  --dry-run                   Show what --upgrade would do, without making changes"
       echo "  --gitignore                 Add BMAD files to .gitignore (for existing/corporate repos)"
@@ -942,24 +1080,72 @@ mkdir -p bmad/config/checklists
 mkdir -p bmad/config/agents/active
 mkdir -p bmad/epics
 
-# ─── Copy template files ────────────────────────────────────────────────────────
-info "Copying workflow, task, template, and checklist files..."
-cp "${TEMPLATE_DIR}/workflows/"*.md bmad/config/workflows/
-cp "${TEMPLATE_DIR}/tasks/"*.md bmad/config/tasks/
-cp "${TEMPLATE_DIR}/templates/"* bmad/config/templates/
-cp "${TEMPLATE_DIR}/checklists/"*.md bmad/config/checklists/
+# ─── Copy or reference template files ──────────────────────────────────────────
+if [[ "${REFERENCE_MODE}" == true ]]; then
+  info "Creating source.yaml reference (shared files resolve from framework — experimental)..."
 
-# Replace placeholders in checklist files
-for f in bmad/config/checklists/*.md; do
-  sed -i.bak \
-    -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
-    -e "s|{{DEPS_INSTALL_CMD}}|${DEPS_INSTALL_CMD}|g" \
-    -e "s|{{APP_LAUNCH_CMD}}|${APP_LAUNCH_CMD}|g" \
-    -e "s|{{TEST_CMD}}|${TEST_CMD}|g" \
-    -e "s|{{LINT_CMD}}|${LINT_CMD}|g" \
-    -e "s|{{FORMAT_CMD}}|${FORMAT_CHECK_CMD}|g" \
-    "${f}" && rm "${f}.bak"
-done
+  # Escape YAML scalar values: backslashes, double quotes, and newlines
+  _yaml_escape() {
+    local val="$1"
+    val="${val//\\/\\\\}"       # escape backslashes
+    val="${val//\"/\\\"}"       # escape double quotes
+    val="${val//$'\n'/\\n}"     # escape newlines
+    echo "\"${val}\""
+  }
+
+  cat > bmad/config/source.yaml << SRCEOF
+# BMAD Framework Source Reference
+# Shared files (workflows, tasks, templates, checklists) are resolved from the
+# framework template directory instead of being copied into the project.
+# Local overrides: place a file at the same relative path under bmad/config/
+# to override the framework version.
+# Portable mode: run init-bmad --portable to copy all files locally.
+#
+# NOTE: Referenced files may contain {{PLACEHOLDER}} tokens. When resolving
+# a referenced file, substitute placeholders using the project_values below.
+# Only placeholders whose keys exist in project_values are replaced; any other
+# {{VAR}} tokens not present in project_values must be left unchanged.
+framework:
+  template_dir: $(_yaml_escape "${TEMPLATE_DIR}")
+  resolve_order:
+    - local     # bmad/config/{path} — project-specific overrides
+    - framework # {template_dir}/{path} — shared framework files
+
+referenced_paths:
+  - workflows/
+  - tasks/
+  - templates/
+  - checklists/
+
+project_values:
+  PROJECT_NAME: $(_yaml_escape "${PROJECT_NAME}")
+  TEST_COMMAND: $(_yaml_escape "${TEST_CMD}")
+  LINT_COMMAND: $(_yaml_escape "${LINT_CMD}")
+  FORMAT_CHECK_COMMAND: $(_yaml_escape "${FORMAT_CHECK_CMD}")
+  APP_LAUNCH_COMMAND: $(_yaml_escape "${APP_LAUNCH_CMD}")
+  ENV_ACTIVATE_CMD: $(_yaml_escape "${ENV_ACTIVATE_CMD}")
+  DEPS_INSTALL_CMD: $(_yaml_escape "${DEPS_INSTALL_CMD}")
+SRCEOF
+  success "  Created bmad/config/source.yaml"
+else
+  info "Copying workflow, task, template, and checklist files..."
+  cp "${TEMPLATE_DIR}/workflows/"*.md bmad/config/workflows/
+  cp "${TEMPLATE_DIR}/tasks/"*.md bmad/config/tasks/
+  cp "${TEMPLATE_DIR}/templates/"* bmad/config/templates/
+  cp "${TEMPLATE_DIR}/checklists/"*.md bmad/config/checklists/
+
+  # Replace placeholders in checklist files
+  for f in bmad/config/checklists/*.md; do
+    sed -i.bak \
+      -e "s|{{ENV_ACTIVATE_CMD}}|${ENV_ACTIVATE_CMD}|g" \
+      -e "s|{{DEPS_INSTALL_CMD}}|${DEPS_INSTALL_CMD}|g" \
+      -e "s|{{APP_LAUNCH_CMD}}|${APP_LAUNCH_CMD}|g" \
+      -e "s|{{TEST_CMD}}|${TEST_CMD}|g" \
+      -e "s|{{LINT_CMD}}|${LINT_CMD}|g" \
+      -e "s|{{FORMAT_CMD}}|${FORMAT_CHECK_CMD}|g" \
+      "${f}" && rm "${f}.bak"
+  done
+fi
 
 # ─── Copy ARCHITECTURE.md to repo root ─────────────────────────────────────────
 if [[ ! -f "ARCHITECTURE.md" ]]; then
@@ -986,125 +1172,73 @@ if [[ -f "${TEMPLATE_DIR}/templates/golden-principles.md" ]]; then
   success "bmad/config/golden-principles.md created."
 fi
 
-# Replace placeholders in task files
-for f in bmad/config/tasks/*.md; do
-  sed -i.bak \
-    -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
-    -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
-    -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
-    "${f}" && rm "${f}.bak"
-done
-
-# Replace placeholders in workflow files
-for f in bmad/config/workflows/*.md; do
-  sed -i.bak \
-    -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
-    -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
-    -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
-    -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
-    "${f}" && rm "${f}.bak"
-done
-
-# Replace specialist table in bmad-flow.md with actual specialist list
-if [[ -f "bmad/config/workflows/bmad-flow.md" ]]; then
-  FLOW_TABLE_TMP=$(mktemp)
-  for spec in "${SPECIALIST_LIST[@]}"; do
-    spec_cap="$(capitalize "${spec}")"
-    echo "| **${spec_cap} Specialist** | ${spec_cap} domain expertise |" >> "${FLOW_TABLE_TMP}"
+# Replace placeholders in copied files (portable mode only)
+if [[ "${REFERENCE_MODE}" != true ]]; then
+  for f in bmad/config/tasks/*.md; do
+    sed -i.bak \
+      -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
+      -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
+      -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
+      "${f}" && rm "${f}.bak"
   done
 
-  awk -v table_file="${FLOW_TABLE_TMP}" '
-    /<!-- TODO:.*Replace with your active specialists/ {
-      while ((getline line < table_file) > 0) print line
-      close(table_file)
-      # Consume rest of multi-line HTML comment
-      if ($0 !~ /-->/) { while (getline > 0 && $0 !~ /-->/) {} }
-      next
-    }
-    { print }
-  ' "bmad/config/workflows/bmad-flow.md" > "bmad/config/workflows/bmad-flow.md.tmp" && \
-    mv "bmad/config/workflows/bmad-flow.md.tmp" "bmad/config/workflows/bmad-flow.md"
+  for f in bmad/config/workflows/*.md; do
+    sed -i.bak \
+      -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+      -e "s|{{TEST_COMMAND}}|${TEST_CMD}|g" \
+      -e "s|{{LINT_COMMAND}}|${LINT_CMD}|g" \
+      -e "s|{{APP_LAUNCH_COMMAND}}|${APP_LAUNCH_CMD}|g" \
+      "${f}" && rm "${f}.bak"
+  done
 
-  rm -f "${FLOW_TABLE_TMP}"
+  # Replace specialist table in bmad-flow.md with actual specialist list
+  if [[ -f "bmad/config/workflows/bmad-flow.md" ]]; then
+    FLOW_TABLE_TMP=$(mktemp)
+    for spec in "${SPECIALIST_LIST[@]}"; do
+      spec_cap="$(capitalize "${spec}")"
+      echo "| **${spec_cap} Specialist** | ${spec_cap} domain expertise |" >> "${FLOW_TABLE_TMP}"
+    done
+
+    awk -v table_file="${FLOW_TABLE_TMP}" '
+      /<!-- TODO:.*Replace with your active specialists/ {
+        while ((getline line < table_file) > 0) print line
+        close(table_file)
+        # Consume rest of multi-line HTML comment
+        if ($0 !~ /-->/) { while (getline > 0 && $0 !~ /-->/) {} }
+        next
+      }
+      { print }
+    ' "bmad/config/workflows/bmad-flow.md" > "bmad/config/workflows/bmad-flow.md.tmp" && \
+      mv "bmad/config/workflows/bmad-flow.md.tmp" "bmad/config/workflows/bmad-flow.md"
+
+    rm -f "${FLOW_TABLE_TMP}"
+  fi
 fi
 
 # ─── Derive test framework name ─────────────────────────────────────────────
 TEST_FRAMEWORK="${TEST_CMD%% *}"
 
-# ─── Copy and customize specialist agents ──────────────────────────────────────
+# ─── Render specialist agents from template + config ─────────────────────────
 info "Setting up specialist agents: ${SPECIALISTS_RAW}..."
+SPEC_TEMPLATE="${TEMPLATE_DIR}/agents/specialist-template.md"
+SPEC_CONFIG="${TEMPLATE_DIR}/agents/specialist-config.yaml"
+
 for spec in "${SPECIALIST_LIST[@]}"; do
-  stub_file="${TEMPLATE_DIR}/agents/stubs/${spec}-specialist.md"
-  if [[ -f "${stub_file}" ]]; then
-    dest="bmad/config/agents/active/${spec}-specialist.md"
-    if [[ -f "${dest}" ]]; then
-      warn "  Skipping ${spec}-specialist.md (already exists, preserving customizations)"
-    else
-      cp "${stub_file}" "${dest}"
-      # Replace project name, test framework, and specialist-specific placeholders
-      SPEC_TECH="" SPEC_FOCUS="" SPEC_FILES=""
-      case "${spec}" in
-        backend)
-          SPEC_TECH="${BACKEND_FRAMEWORK}"
-          SPEC_FOCUS="${PROJECT_NAME} backend services"
-          SPEC_FILES="$(echo "${DETECTED_DIRS}" | tr ' ' '\n' | grep -E '^(src|server|app|api|lib|cmd)/' | tr '\n' ', ' | sed 's/,$//' || true)"
-          ;;
-        frontend)
-          SPEC_TECH="${FRONTEND_FRAMEWORK:-${PRIMARY_STACK}}"
-          SPEC_FOCUS="${PROJECT_NAME} frontend UI"
-          SPEC_FILES="$(echo "${DETECTED_DIRS}" | tr ' ' '\n' | grep -E '^(web|public|src|app)/' | tr '\n' ', ' | sed 's/,$//' || true)"
-          ;;
-        data)
-          SPEC_TECH="${DATA_TOOLS:-${PRIMARY_STACK}}"
-          SPEC_FOCUS="${PROJECT_NAME} data pipelines and storage"
-          SPEC_FILES="$(echo "${DETECTED_DIRS}" | tr ' ' '\n' | grep -E '^(data|src|lib)/' | tr '\n' ', ' | sed 's/,$//' || true)"
-          ;;
-        infra)
-          SPEC_TECH="Infrastructure"
-          SPEC_FOCUS="${PROJECT_NAME} deployment and operations"
-          SPEC_FILES="Dockerfile, docker-compose.yml, terraform/, .github/workflows/"
-          ;;
-      esac
-
-      sed -i.bak \
-        -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
-        -e "s|{{TEST_FRAMEWORK}}|${TEST_FRAMEWORK}|g" \
-        "${dest}" && rm "${dest}.bak"
-
-      # Replace specialist-specific TODO markers if we have values
-      if [[ -n "${SPEC_TECH}" ]]; then
-        UPPER_SPEC="$(echo "${spec}" | tr '[:lower:]' '[:upper:]')"
-        sed -i.bak \
-          -e "s|<!-- TODO: e.g.,.* --> implementation patterns|${SPEC_TECH} implementation patterns|g" \
-          -e "s|<!-- TODO: e.g.,.* --> components and state|${SPEC_TECH} components and state|g" \
-          -e "s|<!-- TODO: e.g.,.* --> data processing|${SPEC_TECH} data processing|g" \
-          -e "s|<!-- TODO: e.g.,.* --> deployment and configuration|${SPEC_TECH} deployment and configuration|g" \
-          "${dest}" && rm "${dest}.bak"
-      fi
-      if [[ -n "${SPEC_FOCUS}" ]]; then
-        sed -i.bak \
-          -e "s|<!-- TODO: e.g.,.* domain expertise -->|${SPEC_FOCUS}|g" \
-          -e "s|<!-- TODO: e.g.,.* API services.*-->|${SPEC_FOCUS}|g" \
-          -e "s|<!-- TODO: e.g.,.* UI components.*-->|${SPEC_FOCUS}|g" \
-          -e "s|<!-- TODO: e.g.,.* Data pipelines.*-->|${SPEC_FOCUS}|g" \
-          -e "s|<!-- TODO: e.g.,.* Deployment.*-->|${SPEC_FOCUS}|g" \
-          "${dest}" && rm "${dest}.bak"
-      fi
-      if [[ -n "${SPEC_FILES}" ]]; then
-        sed -i.bak \
-          -e "s|<!-- TODO: e.g.,.* app/api/.*-->|${SPEC_FILES}|g" \
-          -e "s|<!-- TODO: e.g.,.* src/components/.*-->|${SPEC_FILES}|g" \
-          -e "s|<!-- TODO: e.g.,.* app/data/.*-->|${SPEC_FILES}|g" \
-          -e "s|<!-- TODO: e.g.,.* Dockerfile.*-->|${SPEC_FILES}|g" \
-          "${dest}" && rm "${dest}.bak"
-      fi
-
-      success "  Created ${dest}"
-    fi
+  dest="bmad/config/agents/active/${spec}-specialist.md"
+  if [[ -f "${dest}" ]]; then
+    warn "  Skipping ${spec}-specialist.md (already exists, preserving customizations)"
+  elif [[ -f "${SPEC_TEMPLATE}" ]] && [[ -f "${SPEC_CONFIG}" ]] && render_specialist "${spec}" "${SPEC_CONFIG}" "${SPEC_TEMPLATE}" "${dest}"; then
+    # Replace remaining project-level placeholders
+    sed -i.bak \
+      -e "s|{{PROJECT_NAME}}|${PROJECT_NAME}|g" \
+      -e "s|{{TEST_FRAMEWORK}}|${TEST_FRAMEWORK}|g" \
+      "${dest}" && rm "${dest}.bak"
+    success "  Created ${dest}"
   else
-    warn "  No stub found for '${spec}' — creating blank agent file"
+    # Fallback: specialist not in config — create minimal file
+    warn "  No config found for '${spec}' — creating blank agent file"
     SPEC_CAP="$(capitalize "${spec}")"
-    cat > "bmad/config/agents/active/${spec}-specialist.md" << EOF
+    cat > "${dest}" << EOF
 # ${SPEC_CAP} Specialist - ${PROJECT_NAME}
 
 ACTIVATION-NOTICE: Load this persona when working on ${spec} concerns.

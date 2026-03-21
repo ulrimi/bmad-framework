@@ -69,6 +69,34 @@
 -->
 ```
 
+## Command Design Patterns
+
+### Progressive Disclosure (Phase-Split Pattern)
+
+Commands that exceed ~200 lines should follow the index + phase files pattern:
+
+```
+.claude/commands/
+├── command.md                    (~50-120 lines — index/dispatcher)
+└── command/
+    ├── phase-1-name.md           (self-contained phase instructions)
+    ├── phase-2-name.md
+    └── ...
+```
+
+**Why**: Loading 1,000+ lines of instructions into context when only ~100 are needed at any moment wastes tokens. The index file handles argument parsing and phase dispatch. Each phase file is loaded via `Read` tool only when that phase begins.
+
+**When to apply**: Commands over 200 lines. Below 200 lines, keep as a single file.
+
+**Anti-patterns to avoid**:
+- Don't inline entire command logic from one command inside another — reference it
+- Don't load all phase files upfront — load each phase on demand
+- Don't duplicate content across specialist stubs — use template + config
+
+### Template Resolution
+
+When `bmad/config/source.yaml` exists, shared files (workflows, tasks, templates, checklists) are resolved from the framework template directory rather than local copies. Local overrides take precedence.
+
 ## Cross-Cutting Concerns
 
 <!-- Patterns that span multiple modules. Each concern should note WHERE it is
