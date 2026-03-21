@@ -73,7 +73,7 @@
       - Identify which simplification broke things
       - Revert that specific change
       - Continue with remaining changes
-      - Proceed to commit
+      - Proceed to Phase 8 for review
 
 7.5 Log Simplification Outcome:
     Record in story completion notes:

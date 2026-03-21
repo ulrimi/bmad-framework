@@ -37,7 +37,7 @@ DEFAULT_BRANCH="${DEFAULT_BRANCH:-main}"
 if [ "$CURRENT_BRANCH" = "$DEFAULT_BRANCH" ]; then
     echo "WARNING: On $DEFAULT_BRANCH — cannot auto-create PR."
     echo "Manually create a branch and cherry-pick if needed."
-    STOP HERE — do not push or create PR
+    exit 1
 fi
 
 # Push with upstream tracking

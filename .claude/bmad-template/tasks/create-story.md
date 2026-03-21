@@ -33,27 +33,30 @@ From `ARCHITECTURE.md` and codebase, gather:
 - Integration points and dependencies
 - Config changes needed
 
-### Step 3: Define Implementation Details
+### Step 3: Define Implementation Details & Specialist
 
 - Files to create or modify (with real paths)
 - Function signatures
 - Data flow changes
 - Configuration changes
+- **Specialist**: Determine which specialist agent owns this story based on the primary domain of changes (backend, frontend, data, infra, qa). Store this value for use in frontmatter.
 
 ### Step 4: Create Story File
 
 Use `templates/story-template.yaml` to create a complete story.
-Include YAML frontmatter (`---` fences) with routing metadata before the markdown body:
+Include YAML frontmatter (`---` fences) with routing metadata before the markdown body.
+Use the `specialist` value captured in Step 3:
 - `id`, `epic`, `specialist`, `status`, `scope`, `depends_on`
 
 Then include all sections:
 1. Story Header (bold metadata for human readability)
 2. User Story (As a / I want / So that)
-3. Acceptance Criteria (Given-When-Then)
-4. Technical Context (architecture references)
-5. Implementation Guidance (specific file changes)
-6. Testing Requirements (patterns, edge cases)
-7. Definition of Done (quality gates)
+3. Business Context (problem statement and business value)
+4. Acceptance Criteria (Given-When-Then)
+5. Technical Context (architecture references)
+6. Implementation Guidance (specific file changes)
+7. Testing Requirements (patterns, edge cases)
+8. Definition of Done (quality gates)
 
 ### Step 5: Validate Completeness
 

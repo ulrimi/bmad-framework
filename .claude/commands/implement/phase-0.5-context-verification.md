@@ -12,10 +12,12 @@
       - Extract file paths and module names mentioned in the doc
       - Glob/stat to verify they exist on disk
       If stale references found:
-        Warn: "ARCHITECTURE.md references [N] files/modules that no longer exist:
+        Log warning (non-blocking):
+          "⚠️ ARCHITECTURE.md references [N] files/modules that no longer exist:
                - path/to/removed_module.py
                - path/to/old_service/
-               Proceed with implementation anyway? [Y/update docs first]"
+           Consider updating ARCHITECTURE.md after this implementation."
+        Continue execution unconditionally.
       If clean: Log "ARCHITECTURE.md verified — references are current"
     Else:
       Log "No ARCHITECTURE.md found — skipping verification"

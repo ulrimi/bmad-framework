@@ -27,7 +27,11 @@ All paths use `$REPO_ROOT` as prefix. If in main repo (not worktree) and impleme
 2. **Direct epic directory** — arg is directory containing `epic-overview.md` → Epic Mode
 3. **Direct story path** — arg ends with `.md` and file exists → Story Mode
 4. **Epic name shorthand** — no `/` in arg → Glob `$REPO_ROOT/bmad/epics/{arg}/epic-overview.md` → Epic Mode
-5. **Epic/story shorthand** — one `/` → split `{epic}/{story}`, Glob `stories/*{story}*.md` → Story Mode
+5. **Epic/story shorthand** — one `/` → split `{epic}/{story}`:
+   - First try exact basename match: `stories/{story}.md`
+   - Then glob: `stories/*{story}*.md`
+   - If multiple matches found, prompt user to select rather than picking first
+   → Story Mode
 6. **Multiple story files** — multiple `.md` args → Multi-Story Mode
 
 If none match: show error with available epics from `$REPO_ROOT/bmad/epics/`.
@@ -38,9 +42,9 @@ If none match: show error with available epics from `$REPO_ROOT/bmad/epics/`.
 
 For each story file, extract routing metadata using **frontmatter-first parsing**:
 
-1. Read first 10 lines of the story file
-2. If `---` fence detected on line 1, parse YAML frontmatter for `status`, `specialist`, `depends_on`
-3. If no frontmatter, fall back to parsing bold metadata lines (`**Status**:`, `**Assigned to**:`)
+1. Read the story file starting from line 1
+2. If `---` fence detected on line 1, read until the closing `---` fence (or EOF) and parse the full YAML block for `status`, `specialist`, `depends_on`, `runtime_validation`, etc.
+3. If no frontmatter fence on line 1, fall back to parsing bold metadata lines (`**Status**:`, `**Assigned to**:`)
 
 ```python
 story_queue = []

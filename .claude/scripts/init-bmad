@@ -1083,6 +1083,16 @@ mkdir -p bmad/epics
 # ─── Copy or reference template files ──────────────────────────────────────────
 if [[ "${REFERENCE_MODE}" == true ]]; then
   info "Creating source.yaml reference (shared files resolve from framework — experimental)..."
+
+  # Escape YAML scalar values: backslashes, double quotes, and newlines
+  _yaml_escape() {
+    local val="$1"
+    val="${val//\\/\\\\}"       # escape backslashes
+    val="${val//\"/\\\"}"       # escape double quotes
+    val="${val//$'\n'/\\n}"     # escape newlines
+    echo "\"${val}\""
+  }
+
   cat > bmad/config/source.yaml << SRCEOF
 # BMAD Framework Source Reference
 # Shared files (workflows, tasks, templates, checklists) are resolved from the
@@ -1090,8 +1100,13 @@ if [[ "${REFERENCE_MODE}" == true ]]; then
 # Local overrides: place a file at the same relative path under bmad/config/
 # to override the framework version.
 # Portable mode: run init-bmad --portable to copy all files locally.
+#
+# NOTE: Referenced files may contain {{PLACEHOLDER}} tokens. When resolving
+# a referenced file, substitute placeholders using the project_values below.
+# Only placeholders whose keys exist in project_values are replaced; any other
+# {{VAR}} tokens not present in project_values must be left unchanged.
 framework:
-  template_dir: "${TEMPLATE_DIR}"
+  template_dir: $(_yaml_escape "${TEMPLATE_DIR}")
   resolve_order:
     - local     # bmad/config/{path} — project-specific overrides
     - framework # {template_dir}/{path} — shared framework files
@@ -1103,13 +1118,13 @@ referenced_paths:
   - checklists/
 
 project_values:
-  PROJECT_NAME: "${PROJECT_NAME}"
-  TEST_COMMAND: "${TEST_CMD}"
-  LINT_COMMAND: "${LINT_CMD}"
-  FORMAT_CHECK_COMMAND: "${FORMAT_CHECK_CMD}"
-  APP_LAUNCH_COMMAND: "${APP_LAUNCH_CMD}"
-  ENV_ACTIVATE_CMD: "${ENV_ACTIVATE_CMD}"
-  DEPS_INSTALL_CMD: "${DEPS_INSTALL_CMD}"
+  PROJECT_NAME: $(_yaml_escape "${PROJECT_NAME}")
+  TEST_COMMAND: $(_yaml_escape "${TEST_CMD}")
+  LINT_COMMAND: $(_yaml_escape "${LINT_CMD}")
+  FORMAT_CHECK_COMMAND: $(_yaml_escape "${FORMAT_CHECK_CMD}")
+  APP_LAUNCH_COMMAND: $(_yaml_escape "${APP_LAUNCH_CMD}")
+  ENV_ACTIVATE_CMD: $(_yaml_escape "${ENV_ACTIVATE_CMD}")
+  DEPS_INSTALL_CMD: $(_yaml_escape "${DEPS_INSTALL_CMD}")
 SRCEOF
   success "  Created bmad/config/source.yaml"
 else
