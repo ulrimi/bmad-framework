@@ -97,10 +97,16 @@ thoroughness: quick
 prompt: |
   Quick exploration for story context: $ARGUMENTS
 
-  Find:
-  - Files that will be touched
-  - Patterns to follow
-  - Related existing code
+  > Workers cannot see your conversation, prior agent results, or the broader plan.
+  > This prompt is your complete context. If critical information is missing, state what you need.
+
+  Identify and return:
+  1. Files that will be modified or created (full paths from repo root)
+  2. Patterns used in similar existing code (cite specific file:function examples)
+  3. Related test files that exist for the affected modules
+  4. Key imports and dependencies of the affected files
+
+  Output format: Structured list with file paths, line counts, and pattern examples.
 ```
 
 ### Step 3: Execute Create Story Task

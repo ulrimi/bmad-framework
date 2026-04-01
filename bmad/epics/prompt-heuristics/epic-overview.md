@@ -31,7 +31,7 @@ Analysis of 7 extraction reports from Claude Code's codebase (documented in `doc
 
 | # | Story | Priority | Effort | Specialist | Status |
 |---|-------|----------|--------|------------|--------|
-| 1 | Behavioral Instructions for CLAUDE.md Template | CRITICAL | S | Framework | Draft |
+| 1 | Behavioral Instructions for CLAUDE.md Template | CRITICAL | S | Framework | ✅ Complete |
 | 2 | Anti-Lazy-Delegation + Context Isolation | HIGH | S | Framework | Draft |
 | 3 | Independent Verification Contract | HIGH | S | Framework | Draft |
 | 4 | Rule+Why+Consequence Enrichment | MEDIUM | M | Framework | Draft |

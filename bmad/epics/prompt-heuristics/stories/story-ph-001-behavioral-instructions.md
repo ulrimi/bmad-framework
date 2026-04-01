@@ -2,14 +2,15 @@
 id: ph-001
 epic: prompt-heuristics
 specialist: framework
-status: Draft
+status: ✅ Complete
 scope: [.claude/bmad-template/CLAUDE.md.template, .claude/bmad-template/templates/golden-principles.md]
 depends_on: []
 ---
 
 # Story: Add Internal Behavioral Instructions to CLAUDE.md Template
 
-**Status**: Draft
+**Status**: ✅ Complete
+**Completed**: 2026-04-01
 **Priority**: CRITICAL
 **Effort**: S (single file edit + minor golden-principles addition)
 
@@ -54,7 +55,11 @@ Report 07 ("Internal Features Replication Guide") identifies 6 behavioral paragr
 
 ## Definition of Done
 
-- [ ] CLAUDE.md template has all 6 behavioral subsections
-- [ ] Golden Principles cross-references comment discipline
-- [ ] No template variable tokens in behavioral text
-- [ ] Section ordering is correct for prompt cache efficiency
+- [x] CLAUDE.md template has all 6 behavioral subsections
+- [x] Golden Principles cross-references comment discipline
+- [x] No template variable tokens in behavioral text
+- [x] Section ordering is correct for prompt cache efficiency
+
+## Completion Notes
+
+Implemented 2026-04-01. Added `## Code Quality & QA Standards` section with all 6 behavioral subsections to CLAUDE.md.template (lines 27-67). Constraint subsections (Comment Discipline, Epistemic Honesty, Verification) use Tier 2 severity vocabulary (Do NOT, ALWAYS). Guidance subsections (Proactive Collaboration, Output Efficiency, Communication Style) use Tier 3 (lowercase). Golden Principles rule #14 updated with cross-reference to Comment Discipline section.

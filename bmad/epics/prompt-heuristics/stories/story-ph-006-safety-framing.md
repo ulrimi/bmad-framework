@@ -2,14 +2,14 @@
 id: ph-006
 epic: prompt-heuristics
 specialist: framework
-status: Draft
+status: Complete
 scope: [.claude/commands/implement/phase-11-push-pr.md, .claude/commands/explore.md, .claude/commands/implement/phase-5-testing.md]
 depends_on: []
 ---
 
 # Story: Safety Framing + Large Result Handling
 
-**Status**: Draft
+**Status**: Complete
 **Priority**: LOW
 **Effort**: S (3 files, 1-3 lines each)
 

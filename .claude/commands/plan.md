@@ -49,6 +49,9 @@ thoroughness: medium
 prompt: |
   Explore codebase for ExecPlan: $ARGUMENTS
 
+  > Workers cannot see your conversation, prior agent results, or the broader plan.
+  > This prompt is your complete context. If critical information is missing, state what you need.
+
   Identify:
   - Relevant files and modules (full repository-relative paths)
   - Current state of the system in this area
@@ -64,6 +67,9 @@ prompt: |
 subagent_type: Plan
 prompt: |
   Assess scope and architecture for ExecPlan: $ARGUMENTS
+
+  > Workers cannot see your conversation, prior agent results, or the broader plan.
+  > This prompt is your complete context. If critical information is missing, state what you need.
 
   Read: $REPO_ROOT/ARCHITECTURE.md (if present)
   Read: $REPO_ROOT/docs/ (if present)

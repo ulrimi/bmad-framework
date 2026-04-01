@@ -24,6 +24,9 @@ thoroughness: very thorough
 prompt: |
   # Deep Codebase Exploration: $ARGUMENTS
 
+  > Workers cannot see your conversation, prior agent results, or the broader plan.
+  > This prompt is your complete context. If critical information is missing, state what you need.
+
   ## Your Mission
   Achieve complete understanding of how $ARGUMENTS works in this codebase.
 
@@ -36,6 +39,14 @@ prompt: |
   ```
 
   Read the output file to understand the full codebase structure.
+
+  If repomix output is too large for a single read, re-run with --include scoped
+  to the relevant module:
+  ```bash
+  npx repomix --style xml --output /tmp/explore-context.xml \
+    --include "src/[relevant-module]/**" \
+    --ignore "**/*.lock,node_modules/"
+  ```
 
   ## Exploration Tools
 

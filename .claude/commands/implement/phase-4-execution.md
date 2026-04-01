@@ -27,9 +27,9 @@
        - Mark todo item complete
 
 4.2 Implementation Rules:
-    - ONE file at a time (no parallel file edits)
+    - ONE file at a time (no parallel file edits) — parallel edits risk merge conflicts in the working tree and make it impossible to identify which change broke tests
     - Commit logical units (not every file)
-    - If stuck > 5 min on a file, ask user for guidance
+    - If stuck > 5 min on a file, ask user for guidance — silent struggle wastes context window tokens and delays the entire queue without producing progress
     - Never leave files in broken state
 ```
 

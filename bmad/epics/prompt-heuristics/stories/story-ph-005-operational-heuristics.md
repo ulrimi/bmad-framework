@@ -2,14 +2,14 @@
 id: ph-005
 epic: prompt-heuristics
 specialist: framework
-status: Draft
+status: Complete
 scope: [.claude/commands/bmad.md, .claude/commands/implement/queue-and-errors.md, .claude/commands/implement/phase-5-testing.md, .claude/commands/implement/phase-6-validation.md]
 depends_on: []
 ---
 
 # Story: Operational Heuristics — Continue/Spawn, Circuit Breaker, Resume
 
-**Status**: Draft
+**Status**: Complete
 **Priority**: MEDIUM
 **Effort**: S (3 files, small additions each)
 
@@ -31,8 +31,8 @@ Three related gaps from the analysis report, consolidated into one story because
 
 ### Continue vs. Spawn Decision Heuristics
 
-- [ ] AC1: `/bmad` includes a decision reference table for when coordinator should SendMessage vs. spawn fresh
-- [ ] AC2: `queue-and-errors.md` includes guidance for error recovery: continue existing error context vs. start fresh
+- [x] AC1: `/bmad` includes a decision reference table for when coordinator should SendMessage vs. spawn fresh
+- [x] AC2: `queue-and-errors.md` includes guidance for error recovery: continue existing error context vs. start fresh
 
 **Decision table to add:**
 
@@ -50,14 +50,14 @@ Three related gaps from the analysis report, consolidated into one story because
 
 ### Circuit Breaker Standardization
 
-- [ ] AC3: Phase 5 testing has an explicit "max 3 fix attempts" limit with escalation to user (note: `queue-and-errors.md` line 26 already has `"up to 3 attempts"` — this formalizes it in phase-5 where implementers encounter it)
-- [ ] AC4: The circuit breaker rationale is stated: "Repeated fix attempts beyond 3 cycles consume context without converging. Escalate to user instead."
-- [ ] AC5: All retry loops across phases use the same limit (3) — verify consistency with 6.5 and 6.75
+- [x] AC3: Phase 5 testing has an explicit "max 3 fix attempts" limit with escalation to user (note: `queue-and-errors.md` line 26 already has `"up to 3 attempts"` — this formalizes it in phase-5 where implementers encounter it)
+- [x] AC4: The circuit breaker rationale is stated: "Repeated fix attempts beyond 3 cycles consume context without converging. Escalate to user instead."
+- [x] AC5: All retry loops across phases use the same limit (3) — verify consistency with 6.5 and 6.75
 
 ### Resume/Continuation Pattern
 
-- [ ] AC6: `queue-and-errors.md` story transition includes explicit suppression of recap behavior
-- [ ] AC7: Uses the negative list technique: "Do not summarize what was just completed. Do not recap the previous story. Do not preface with 'Moving on to...' — the commit message captures the completed work."
+- [x] AC6: `queue-and-errors.md` story transition includes explicit suppression of recap behavior
+- [x] AC7: Uses the negative list technique: "Do not summarize what was just completed. Do not recap the previous story. Do not preface with 'Moving on to...' — the commit message captures the completed work."
 
 ## Technical Context
 
@@ -122,8 +122,8 @@ Max 3 fix attempts per failing test. If still failing after 3 cycles:
 
 ## Definition of Done
 
-- [ ] Continue vs. Spawn table in `/bmad`
-- [ ] Resume suppression pattern in queue-and-errors
-- [ ] Circuit breaker (3 retries) explicit in Phase 5
-- [ ] Circuit breaker rule documented in queue-and-errors as universal
-- [ ] Error recovery Continue/Spawn guidance in queue-and-errors
+- [x] Continue vs. Spawn table in `/bmad`
+- [x] Resume suppression pattern in queue-and-errors
+- [x] Circuit breaker (3 retries) explicit in Phase 5
+- [x] Circuit breaker rule documented in queue-and-errors as universal
+- [x] Error recovery Continue/Spawn guidance in queue-and-errors

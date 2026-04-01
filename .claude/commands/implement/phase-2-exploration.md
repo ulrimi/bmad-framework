@@ -7,6 +7,9 @@
     prompt: |
       Exploration for implementing: [STORY TITLE]
 
+      > Workers cannot see your conversation, prior agent results, or the broader plan.
+      > This prompt is your complete context. If critical information is missing, state what you need.
+
       Files mentioned in story: [LIST FROM TECHNICAL CONTEXT]
 
       Find:

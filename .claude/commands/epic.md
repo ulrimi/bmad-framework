@@ -27,6 +27,9 @@ thoroughness: medium
 prompt: |
   Explore codebase for: $ARGUMENTS
 
+  > Workers cannot see your conversation, prior agent results, or the broader plan.
+  > This prompt is your complete context. If critical information is missing, state what you need.
+
   MANDATORY: Run repomix first:
   ```bash
   npx repomix --style xml --output /tmp/context.xml \
@@ -47,6 +50,9 @@ subagent_type: Plan
 prompt: |
   Analyze architecture implications for: $ARGUMENTS
 
+  > Workers cannot see your conversation, prior agent results, or the broader plan.
+  > This prompt is your complete context. If critical information is missing, state what you need.
+
   Read: $REPO_ROOT/ARCHITECTURE.md (or docs/ if present)
 
   Determine:
@@ -58,6 +64,14 @@ prompt: |
 ```
 
 ### Step 2: Execute Create Epic Task
+
+**Synthesis Rule**: When consuming agent outputs below, NEVER delegate understanding. Translate agent findings into specific, concrete content:
+- Reference exact file paths and line numbers from agent results (not "the relevant files")
+- Include concrete technical details (not "based on agent findings")
+- Inline the actual content — never use `[content]` placeholders
+
+**BAD**: "Based on the exploration results, create stories for the identified gaps."
+**GOOD**: "Create a story for adding retry logic to `src/api/client.py:89` — the `fetch_data` function has no error handling for transient 503 responses from the upstream API."
 
 With agent outputs, execute: `$REPO_ROOT/bmad/config/tasks/create-epic.md`
 

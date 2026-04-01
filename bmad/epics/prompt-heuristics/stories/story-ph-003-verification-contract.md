@@ -2,14 +2,15 @@
 id: ph-003
 epic: prompt-heuristics
 specialist: framework
-status: Draft
+status: ✅ Complete
 scope: [.claude/commands/implement/phase-8-review.md, .claude/commands/implement/phase-9-completion.md]
 depends_on: [ph-002]
 ---
 
 # Story: Independent Verification Contract in Phase 8
 
-**Status**: Draft
+**Status**: ✅ Complete
+**Completed**: 2026-04-01
 **Priority**: HIGH
 **Effort**: S (add one section to one file)
 
@@ -90,10 +91,36 @@ Agent:
 
 ## Definition of Done
 
-- [ ] Phase 8 contains section 8.6b with full verification contract
-- [ ] Trigger condition: 3+ files OR API/data/auth scope
-- [ ] Skip condition logged for small changes
-- [ ] Verifier uses PASS/FAIL/PARTIAL verdicts with evidence requirements
-- [ ] Fix-and-re-verify loop with max 3 cycles
-- [ ] Spot-check on PASS
-- [ ] Phase 9 completion notes template includes verification results
+- [x] Phase 8 contains section 8.6b with full verification contract
+- [x] Trigger condition: 3+ files OR API/data/auth scope
+- [x] Skip condition logged for small changes
+- [x] Verifier uses PASS/FAIL/PARTIAL verdicts with evidence requirements
+- [x] Fix-and-re-verify loop with max 3 cycles
+- [x] Spot-check on PASS
+- [x] Phase 9 completion notes template includes verification results
+
+## Completion Notes
+
+**Implemented**: 2026-04-01
+
+### Files Changed
+- `.claude/commands/implement/phase-8-review.md` - Added section 8.6b Independent Verification between 8.6 and 8.7
+- `.claude/commands/implement/phase-9-completion.md` - Added "### Verification Results" subsection to completion notes template
+
+### Simplification Results
+- Files reviewed: 2
+- Issues found: 0
+- Status: No issues found
+
+### Self-Review Results
+- Findings: 0 total (0 critical/high, 0 medium, 0 nits)
+- Fixed: 0
+- Skipped: 0 nits
+
+### Verification Results
+- Verdict: Skipped
+- Notes: 2 files changed, no API/data/auth scope — below trigger threshold
+
+### Notes
+- Positioned 8.6b before 8.7 so verification fixes get caught by final re-validation pass
+- Context isolation warning from ph-002 included verbatim in verifier prompt template

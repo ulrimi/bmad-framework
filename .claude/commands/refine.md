@@ -45,10 +45,22 @@ subagent_type: general-purpose
 prompt: |
   Perform rigorous gap analysis on epic: $ARGUMENTS
 
+  > Workers cannot see your conversation, prior agent results, or the broader plan.
+  > This prompt is your complete context. If critical information is missing, state what you need.
+
   ## Inputs
-  - Epic overview: [content]
-  - Stories: [content]
-  - Fresh codebase context: [from repomix]
+
+  Paste the FULL content of each input below — do not use placeholders or references.
+
+  ### Epic Overview
+  <!-- COORDINATOR: Copy-paste the entire epic-overview.md content here -->
+
+  ### Stories
+  <!-- COORDINATOR: Copy-paste each story file's full content here, separated by --- -->
+
+  ### Codebase Context
+  <!-- COORDINATOR: Copy-paste the repomix output or a structured summary of relevant files,
+       their paths, line counts, and key functions/classes. Do NOT write "[from repomix]" -->
 
   ## Analysis Required
 

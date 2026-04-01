@@ -23,6 +23,10 @@ Runs automatically after ALL stories in the queue are complete.
 
 ## 11.2 Push Branch to Remote
 
+> **Consequence**: Pushing to remote is visible to the entire team and triggers CI pipelines.
+> If tests are failing locally, the push will notify reviewers of broken code. Verify all
+> quality gates (Phase 5-8) passed before pushing.
+
 ```yaml
 CURRENT_BRANCH=$(git branch --show-current)
 # Robust default branch detection (never hardcode main/master)
@@ -71,6 +75,10 @@ FILES_CHANGED=$(git diff --stat origin/$DEFAULT_BRANCH..HEAD | tail -1)
 ```
 
 ## 11.5 Create PR
+
+> **Consequence**: Creating a PR notifies reviewers and may trigger automated checks or
+> deployments. Ensure the PR title and body accurately represent the changes — misleading
+> descriptions waste reviewer time.
 
 ```yaml
 Generate PR title:

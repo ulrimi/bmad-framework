@@ -2,14 +2,15 @@
 id: ph-004
 epic: prompt-heuristics
 specialist: framework
-status: Draft
+status: ✅ Complete
 scope: [.claude/commands/implement/phase-4-execution.md, .claude/commands/implement/phase-8-review.md, .claude/commands/implement/queue-and-errors.md, .claude/bmad-template/templates/golden-principles.md]
 depends_on: [ph-001]
 ---
 
 # Story: Rule+Why+Consequence Enrichment
 
-**Status**: Draft
+**Status**: ✅ Complete
+**Completed**: 2026-04-01
 **Priority**: MEDIUM
 **Effort**: M (multiple files, surgical additions per rule)
 

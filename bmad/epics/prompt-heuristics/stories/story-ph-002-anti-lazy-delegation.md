@@ -2,14 +2,15 @@
 id: ph-002
 epic: prompt-heuristics
 specialist: framework
-status: Draft
+status: Complete
 scope: [.claude/commands/bmad.md, .claude/commands/epic.md, .claude/commands/story.md, .claude/commands/implement/phase-2-exploration.md, .claude/commands/implement/phase-8-review.md, .claude/commands/refine.md, .claude/commands/maintain.md, .claude/commands/explore.md, .claude/commands/plan.md]
 depends_on: []
 ---
 
 # Story: Anti-Lazy-Delegation Rules + Context Isolation Warnings
 
-**Status**: Draft
+**Status**: Complete
+**Completed**: 2026-04-01
 **Priority**: HIGH
 **Effort**: S (add standard blocks to existing subagent prompts)
 
@@ -96,7 +97,16 @@ Upgraded (SPECIFIC):
 
 ## Definition of Done
 
-- [ ] Synthesis rule with good/bad examples in `/bmad`, `/epic`, Phase 8
-- [ ] Context isolation warning in all 10 subagent prompt blocks
-- [ ] `/story.md` prompt upgraded from VAGUE to SPECIFIC
-- [ ] `/refine.md` prompt upgraded from MODERATE to SPECIFIC
+- [x] Synthesis rule with good/bad examples in `/bmad`, `/epic`, Phase 8
+- [x] Context isolation warning in all 11 subagent prompt blocks
+- [x] `/story.md` prompt upgraded from VAGUE to SPECIFIC
+- [x] `/refine.md` prompt upgraded from MODERATE to SPECIFIC
+
+## Completion Notes
+
+- Added `## Synthesis Rule` section with good/bad examples to `bmad.md` (before `## Execution`)
+- Added synthesis rule with examples at Step 2 in `epic.md`
+- Added concrete diff passing instruction + context isolation to `phase-8-review.md` section 8.5
+- Added context isolation notice to all 11 subagent prompts across 8 files
+- Upgraded `story.md` explore prompt: replaced vague "Find:" list with structured output requirements (4 specific items + output format)
+- Upgraded `refine.md` gap analysis prompt: replaced `[content]` placeholders with explicit copy-paste instructions via HTML comments

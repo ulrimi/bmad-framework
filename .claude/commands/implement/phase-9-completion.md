@@ -46,6 +46,13 @@ This phase includes story file updates (9) and optional knowledge updates (9.5).
     - Fixed: [N]
     - Escalated: [N]
 
+    ### Verification Results (if triggered)
+    - Verdict: [PASS / FAIL / PARTIAL / Skipped]
+    - Verification cycles: [N]
+    - Checks run: [N]
+    - Spot-check result: [passed / failed / N/A]
+    - Notes: [any partial results or escalation details]
+
     ### Notes
     - [Any implementation decisions or deviations]
     ```

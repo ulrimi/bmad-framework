@@ -59,6 +59,9 @@ Agent:
   prompt: |
     Scan the codebase at $REPO_ROOT for pattern consistency issues.
 
+    > Workers cannot see your conversation, prior agent results, or the broader plan.
+    > This prompt is your complete context. If critical information is missing, state what you need.
+
     If golden-principles.md exists at $REPO_ROOT/bmad/config/golden-principles.md,
     read it and check the codebase against each rule.
 
@@ -96,6 +99,9 @@ Agent:
   description: "Check doc freshness"
   prompt: |
     Check documentation freshness in the repository at $REPO_ROOT.
+
+    > Workers cannot see your conversation, prior agent results, or the broader plan.
+    > This prompt is your complete context. If critical information is missing, state what you need.
 
     1. ARCHITECTURE.md (if exists):
        - Scan for references to files, directories, or modules that no longer exist
