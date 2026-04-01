@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/michaelulrich/bmad-framework rev-parse --show-toplevel)",
+      "Bash(ls -la /Users/michaelulrich/bmad-framework/.claude/commands/ | grep -E '\\\\.\\(md|yaml|json\\)$')",
+      "Read(//private/tmp/test-init-002/**)",
+      "Bash(./install.sh --copy --force 2>&1)",
+      "Read(//private/tmp/test-init-003/bmad/qf-bmad/agents/active/**)",
+      "Bash(sed -n '/Specialist Agent Delegation/,/Master Orchestration/p' /tmp/test-init-003/bmad/qf-bmad/workflows/bmad-flow.md)",
+      "Bash(sed -n '/Key References/,/Environment/p' /tmp/test-init-003/CLAUDE.md)",
+      "Read(//private/tmp/test-init-003b/**)",
+      "Bash(echo \"=== FULL KEY REFS ===\" && sed -n '126,136p' /tmp/test-e2e/CLAUDE.md && echo \"\" && echo \"=== FULL ARCH ===\" && sed -n '7,11p' /tmp/test-e2e/CLAUDE.md)",
+      "Read(//private/tmp/test-story003b/**)",
+      "Bash(sed -n '120,135p' CLAUDE.md)",
+      "Bash(git commit:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
